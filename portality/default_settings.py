@@ -18,7 +18,7 @@ PUBLIC_REGISTER = False # Can people register publicly? If false, only the super
 
 # elasticsearch settings
 ELASTIC_SEARCH_HOST = "http://127.0.0.1:9200"
-ELASTIC_SEARCH_DB = "leaps2"
+ELASTIC_SEARCH_DB = "leaps"
 INITIALISE_INDEX = False # whether or not to try creating the index and required index types on startup
 NO_QUERY_VIA_API = ['account','student'] # list index types that should not be queryable via the API
 
