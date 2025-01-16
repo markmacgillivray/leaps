@@ -1,7 +1,7 @@
 import json, time
 from copy import deepcopy
 
-from flask import Blueprint, request, flash, abort, make_response, render_template, redirect, url_for
+from flask import Blueprint, request, flash, abort, render_template, redirect, url_for
 from flask_login import current_user
 
 from flask_weasyprint import HTML, render_pdf

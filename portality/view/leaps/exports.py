@@ -5,7 +5,7 @@ from io import StringIO
 
 import json, string
 
-from flask import Blueprint, request, flash, abort, make_response, render_template, redirect, send_file
+from flask import Blueprint, request, abort, render_template, redirect, send_file
 from flask_login import current_user
 
 from portality.core import app

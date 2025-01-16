@@ -5,7 +5,7 @@ from portality.core import app, current_user
 
 from portality.dao import DomainObject as DomainObject
 
-import requests, json, uuid
+import uuid
 
 import portality.util as util
 

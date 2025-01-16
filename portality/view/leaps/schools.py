@@ -1,7 +1,6 @@
-import json
 from copy import deepcopy
 
-from flask import Blueprint, request, flash, abort, make_response, render_template, redirect
+from flask import Blueprint, request, abort, render_template, redirect
 from flask_login import current_user
 
 from flask_weasyprint import HTML, render_pdf
