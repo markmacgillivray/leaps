@@ -41,19 +41,19 @@ MAPPINGS['simd'] = {}
 
 #UPLOAD_DATA = {} # key should match an index name above, and value should be the file location to bulk upload
 UPLOAD_DATA = {
-  #"student" : "/home/mac/MOVE/leaps/leaps_student.json",
-  #"account" : "/home/mac/MOVE/leaps/leaps_account.json",
-  #"school" : "/home/mac/MOVE/leaps/leaps_school.json",
-  #"subject" : "/home/mac/MOVE/leaps/leaps_subject.json",
-  #"advancedsubject" : "/home/mac/MOVE/leaps/leaps_advancedsubject.json",
-  #"level" : "/home/mac/MOVE/leaps/leaps_level.json",
-  #"grade" : "/home/mac/MOVE/leaps/leaps_grade.json",
-  #"institution" : "/home/mac/MOVE/leaps/leaps_institution.json",
-  #"advancedlevel" : "/home/mac/MOVE/leaps/leaps_advancedlevel.json",
-  #"archive" : "/home/mac/MOVE/leaps/leaps_archive.json",
-  #"simd" : "/home/mac/MOVE/leaps/leaps_simd.json"
+  #"student" : "/home/leaps/MOVE/leaps/leaps_student.json",
+  #"account" : "/home/leaps/MOVE/leaps/leaps_account.json",
+  #"school" : "/home/leaps/MOVE/leaps/leaps_school.json",
+  #"subject" : "/home/leaps/MOVE/leaps/leaps_subject.json",
+  #"advancedsubject" : "/home/leaps/MOVE/leaps/leaps_advancedsubject.json",
+  #"level" : "/home/leaps/MOVE/leaps/leaps_level.json",
+  #"grade" : "/home/leaps/MOVE/leaps/leaps_grade.json",
+  #"institution" : "/home/leaps/MOVE/leaps/leaps_institution.json",
+  #"advancedlevel" : "/home/leaps/MOVE/leaps/leaps_advancedlevel.json",
+  #"archive" : "/home/leaps/MOVE/leaps/leaps_archive.json",
+  #"simd" : "/home/leaps/MOVE/leaps/leaps_simd.json"
 }
-# key should match an index with value True if index should be emptied before upload - and only happens if in UPLOAD_DATA
+#UPLOAD_EMPTY_FIRST = {} key should match an index with value True if index should be emptied before upload - and only happens if in UPLOAD_DATA
 UPLOAD_EMPTY_FIRST = {
   #"student" : True,
   #"account" : True,
