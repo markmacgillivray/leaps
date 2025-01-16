@@ -42,7 +42,11 @@ def load_account_for_login_manager(userid):
 @app.context_processor
 def set_current_context():
     """ Set some template context globals. """
-    return dict(current_user=current_user, app=app, adminsettings=models.Account.pull(app.config['SUPER_USER'][0]).data.get('settings',{}))
+    try: # this will fail if first default super user was not yet created
+        adminsettings = models.Account.pull(app.config['SUPER_USER'][0]).data.get('settings',{})
+    except:
+        adminsettings = {}
+    return dict(current_user=current_user, app=app, adminsettings=adminsettings)
 
 
 @app.before_request
