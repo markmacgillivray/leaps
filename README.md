@@ -68,32 +68,9 @@ sudo chown root:root supervisord.conf
 sudo service supervisord start
 
 
-Install elasticsearch 0.90.2
-============================
+Install opensearch
+==================
 
-sudo apt-get install default-jre
-
-cd /home/leaps
-curl -L https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-0.90.2.tar.gz -o elasticsearch.tar.gz
-tar -xzvf elasticsearch.tar.gz
-ln -s elasticsearch-0.90.2 elasticsearch
-cd elasticsearch/bin
-git clone git://github.com/elasticsearch/elasticsearch-servicewrapper.git
-cd elasticsearch-servicewrapper
-git checkout 0.90
-mv service ../
-cd ../
-sudo rm -R elasticsearch-servicewrapper
-sudo ln -s /home/leaps/elasticsearch/bin/service/elasticsearch /etc/init.d/elasticsearch
-sudo update-rc.d elasticsearch defaults
-
-# vim config/elasticsearch.yml and uncomment bootstrap.mlockall true
-# and uncomment cluster.name: elasticsearch and change to leaps
-
-# vim bin/service/elasticsearch.conf and set.default.ES_HEAP_SIZE=2048
-# and set wrapper.logfile.loglevel wrapper.logfile.maxsize wrapper.logfile.maxfiles to WARN 100m and 20
-
-sudo /etc/init.d/elasticsearch start
 
 
 Clone and install LEAPS
@@ -101,15 +78,13 @@ Clone and install LEAPS
 
 sudo apt-get install libxml2-dev libxslt1-dev libffi-dev weasyprint
 # libpango-1.0-0 also required or is weasyprint enough? NOTE apt install weasyprint is necessary even though included in the setup
-virtualenv -p python2.7 --no-site-packages leaps
+git clone https://github.com/markmacgillivray/leaps.git
 cd leaps
-mkdir src
-cd src
-git clone https://github.com/CottageLabs/leaps.git
+python3 -m venv .venv
 cd leaps
-source ../../bin/activate
+source .venv/bin/activate
 pip install gunicorn
-pip install eventlet==0.20
+pip install eventlet
 pip install lxml
 pip install -e .
 
@@ -120,11 +95,11 @@ Symlink LEAPS nginx and supervisor configs
 ==========================================
 
 cd /etc/nginx/sites-enabled
-sudo ln -s ~/leaps/src/leaps/config/nginx/leaps .
+sudo ln -s ~/leaps/config/nginx/leaps .
 sudo nginx -t
 sudo service nginx restart
 cd /etc/supervisor/conf.d
-sudo ln -s ~/leaps/src/leaps/config/supervisor/leaps.conf .
+sudo ln -s ~/leaps/config/supervisor/leaps.conf .
 sudo supervisorctl update
 
 
@@ -139,10 +114,5 @@ sudo apt-get install python-certbot-nginx
 sudo certbot --nginx
 
 
-Transfer data
-=============
-
-Just copying the elasticsearch data folder over is the easiest way, then name it the same 
-as the cluster name, and restart elasticsearch and LEAPS.
 
 

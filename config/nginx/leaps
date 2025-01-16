@@ -18,7 +18,7 @@ server {
 
     location /static {
         autoindex off;
-        root /home/leaps/leaps/src/leaps/portality;
+        root /home/leaps/leaps/portality;
         break;
     }
 
