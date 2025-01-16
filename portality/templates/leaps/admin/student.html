@@ -1,0 +1,1338 @@
+{% extends "leaps/admin/admin-base.html" %}
+
+{% block options %}
+{% if current_user.edit_students and (not record or record.archive == "current") %}
+<a id="triggersave" class="btn btn-success" href="#">Save</a>
+<a id="triggerdelete" class="btn btn-danger" href="#">Delete</a><br>
+<a class="btn" href="/admin/student/{{record.id}}.pdf">Print</a>
+{% endif %}
+
+{% if current_user.view_admin and not current_user.edit_students %}
+<a class="btn" href="/admin/student/{{record.id}}.pdf">Print</a>
+{% endif %}
+
+{% endblock %}
+
+
+
+{% block content %}
+
+<script>
+jQuery(document).ready(function() {    
+
+{% if current_user.edit_students and (not record or record.archive == 'current') %}
+
+    $("[data-required]").attr('data-required-message',"");
+
+    $('#survey').parsley('validate');
+
+    // add a datepicker to all datepicker classes
+    var opts = {
+        inline: true,
+        dateFormat: 'dd/mm/yy',
+        changeYear: true
+    }
+    $('.datepicker').datepicker(opts);
+    var dobopts = {
+        inline: true,
+        dateFormat: 'dd/mm/yy',
+        changeYear: true,
+        yearRange: "-22:+0",
+        defaultDate: '-17y',
+        minDate: '-22y',
+        maxDate: '-12y'
+    }
+    $('.dobdatepicker').datepicker(dobopts);
+
+
+    // function of things to do whenever a row is appended
+    var preprow = function(row) {
+        $(row).find('.delete-row').bind('click',deleterow);
+        $(row).find('.edit-row').unbind('click',editrow).bind('click',editrow);
+        $(row).find('select').val("");
+        $(row).find('input').val("");
+        $(row).find('textarea').html("");
+        $(row).find('.datepicker').datepicker("destroy");
+        $(row).find('.datepicker').removeClass("hasDatepicker").removeAttr('id');
+        $(row).find('.datepicker').datepicker(opts);
+        var subjects = {{ selections.advancedsubjects|tojson|safe }};
+        var stext = '<option></option>';
+	    for ( var i = 0; i < subjects.length; i++ ) {
+	        stext += '<option>' + subjects[i] + '</option>';
+	    };
+        $(row).find('.subjectselector').html(stext);
+        $(row).find('.institutionselector').unbind('change',limitsubjects).bind('change',limitsubjects);
+        $(row).find('.subjectselector').unbind('change',limitlevels).bind('change',limitlevels);
+    }
+
+    // fit a static row remover for old content
+    $('table.multidisplay').find('tbody').children('tr').each(function() {
+		{% if current_user.do_admin %}
+            var adder = '<a class="btn btn-warning static-delete-row" style="margin:-10px 2px 0 0;" href="#">delete</a>';
+		{% else %}
+			var adder;
+			if ( !$(this).parents('table').hasClass('isapplications') ) {
+            	adder = '<a class="btn btn-warning static-delete-row" style="margin:-10px 2px 0 0;" href="#">delete</a>';
+			} else {
+            	adder = '<a class="btn btn-warning static-delete-row" style="margin:-10px 2px 0 0;visibility:hidden;" href="#">delete</a>';
+			}
+		{% endif %}
+        adder += '<a class="btn edit-row" style="margin:-10px 2px 0 0;';
+        if ( $(this).hasClass('noedit') || !$(this).parents('table').hasClass('editablerows') ) { adder += 'visibility:hidden;'; }
+        adder += '" href="#">edit</a>';
+        $(this).children('td').first().prepend(adder).children('select, input').addClass('narrow');
+    });
+    var staticdeleterow = function(event) {
+        event.preventDefault();
+        var row = $(this).closest('tr').clone(true).get(0);
+        $(this).closest('tr').remove();
+    }
+    $('.static-delete-row').bind('click',staticdeleterow);
+
+    var sels = {{ selections|tojson|safe }};
+    // add an edit row that allows a qualifications or applications row to become editable
+    var editrow = function(event) {
+        event.preventDefault();
+        $(this).parent().parent().children('td').each(function() {
+            if (!$(this).hasClass('noedit') && $(this).children('input').length) {
+                var val = $(this).children('input[type="hidden"]').first().val();
+                var name = $(this).children('input[type="hidden"]').first().attr('name');
+                var seltype = name.split('_')[1] + 's';
+                var stl = $(this).children('input[type="text"]').first().attr('style');
+                $(this).children('input[type="hidden"]').not('.noedit').remove();
+                $(this).children('input[type="text"]').remove();
+                var selector = '<select name="' + name + '" class="needselect2';
+                if (name.indexOf('application_') === 0) selector += ' ' + name.replace('application_','') + 'selector';
+                selector += '"';
+                if (name.indexOf('application_') === 0) selector += ' sv="' + val + '"';
+                if (stl) selector += ' style="' + stl + '"';
+                selector += '><option></option>';
+                if ( seltype == "years" ) {
+                    var selchoices = ["Third year","Fourth year","Fifth year","Sixth year","Other"];
+                } else {
+                    var selchoices = sels[seltype];
+                }
+                for ( var t in selchoices ) {
+                    selector += '<option';
+                    if ( selchoices[t] == val ) {
+                        selector += ' selected="selected"';
+                    }
+                    selector += '>' + selchoices[t] + '</option>';
+                }
+                selector += '</select>';
+                $(this).append(selector);
+                if (name.indexOf('application_') === 0) {
+                    var nb = name.replace('application_','');
+                    if (nb === 'institution') $(this).children('.institutionselector').bind('change', limitsubjects);
+                    if (nb === 'subject') $(this).children('.subjectselector').bind('change', limitlevels);
+                    if ($(this).prev().children('select').length && $(this).prev().children('select').first().attr('name').indexOf('application_') === 0) {
+                        $(this).prev().children('select').first().trigger('change');
+                    }
+                }
+            }
+        })
+    }
+
+    // add / remove rows to list items
+    $('table.multi').find('tbody').children('tr').each(function() {
+        $(this).children('td').first().prepend('<a class="btn btn-warning delete-row" style="margin:-10px 47px 0 0;" href="#">delete</a>').children('select, input').addClass('narrow');
+    });
+    $('.edit-row').bind('click',editrow);
+
+    var addrow = function(event) {
+        event.preventDefault();
+        var maxrows = 50;
+        $(this).closest('table').hasClass('manyrows') ? maxrows = 100 : false;
+        $(this).closest('tr').siblings().length == (maxrows - 1) ? $(this).hide() : false;
+        if ( $(this).closest('tr').siblings().length < maxrows ) {
+            var row = $(this).closest('tr').prev().clone(true).get(0);
+            $(row).find('.noclone').remove();
+            $(row).insertBefore($(this).closest('tr'));
+            preprow(row);
+        }
+    }
+	$('table.multi').find('tbody').append('<tr><td><a class="btn btn-success add-row" href="#">add</a></td></tr>');
+    $('.add-row').bind('click',addrow);
+		
+    var deleterow = function(event) {
+        event.preventDefault();
+        var row = $(this).closest('tr').clone(true).get(0);
+        var maxrows = 50;
+        $(this).closest('table').hasClass('manyrows') ? maxrows = 100 : false;
+        $(this).closest('tr').siblings().length == maxrows ? $(this).closest('tr').siblings().find('.add-row').show() : false;
+        if ( $(this).closest('tr').siblings().length == 1 ) {
+            $(row).find('.noclone').remove();
+            $(row).insertBefore($(this).closest('tr'));
+            preprow(row);
+        }
+        $(this).closest('tr').remove();
+    }
+    $('.delete-row').bind('click',deleterow);
+
+
+    var limitlevels = function(event) {
+        var ls = $(this).closest('tr').find('.levelselector');
+        var sv = ls.attr('sv');
+        if (sv) $(this).removeAttr('sv');
+        ls.attr("disabled","disabled");
+        var level = $('option:selected', this).attr('data-level');
+        if ( level ) {
+            ls.html('<option></option><option selected="selected">' + level + '</option>')
+        } else {
+            var levels = {{ selections.advancedlevels|tojson|safe }};
+            var lopts = '<option></option>';
+            for ( var i = 0; i < levels.length; i++ ) {
+                lopts += "<option";
+                if (sv && sv === levels[i]) lopts += ' selected="selected"';
+                lopts += ">" + levels[i] + "</option>";
+            }
+            ls.html(lopts);
+        }
+        ls.removeAttr("disabled");
+    }
+    var limitsubjects = function(event) {
+        var institution = $(this).val();
+        $(this).closest('tr').find('.subjectselector').attr("disabled","disabled");
+        $(this).closest('tr').find('.levelselector').val("").attr("disabled","disabled");
+        if ( institution == "" ) {
+            var subjects = {{ selections.advancedsubjects|tojson|safe }};
+            var opts = '<option></option>';
+            for ( var i = 0; i < subjects.length; i++ ) {
+                opts += "<option>" + subjects[i] + "</option>";
+            }
+            $(this).closest('tr').find('.subjectselector').html(opts).removeAttr("disabled");
+            $(this).closest('tr').find('.levelselector').html(opts).removeAttr("disabled");
+        } else {
+            var qry = {
+                "query": {
+                    "term": {
+                        "name.exact": institution
+                    }
+                }
+            };
+            var url = '/query/institution/_search?source=' + JSON.stringify(qry);
+            $.ajax({
+                datatype:'JSON',
+                url:url,
+                obj:$(this),
+                sv: $(this).closest('tr').find('.subjectselector').attr('sv'),
+                success: function(data) {
+                    if ( data.hits.total == 0 ) {
+                        var subjects = {{ selections.advancedsubjects|tojson|safe }};
+                    } else if ( data.hits.hits[0]._source.subjects !== undefined && data.hits.hits[0]._source.subjects.length > 0 ) {
+                        var subjects = data.hits.hits[0]._source.subjects;
+                    } else {
+                        var subjects = {{ selections.advancedsubjects|tojson|safe }};
+                    }
+                    var opts = '<option></option>';
+                    var slctd = false;
+                    for ( var i = 0; i < subjects.length; i++ ) {
+                        if ( subjects[i].name === undefined ) {
+                            opts += "<option"
+                            if (this.sv === subjects[i]) {
+                                slctd = true;
+                                opts += ' selected="selected"';
+                            }
+                            opts += ">" + subjects[i] + "</option>";
+                        } else {
+                            opts += "<option";
+                            subjects[i].level !== undefined ? opts += ' data-level="' + subjects[i].level + '"' : false;
+                            if (this.sv === subjects[i].name) {
+                                opts += ' selected="selected"';
+                                slctd = true;
+                            }
+                            opts += ">" + subjects[i].name + "</option>";
+                        }
+                    }
+                    this.obj.closest('tr').find('.subjectselector').html(opts).removeAttr("disabled");
+                    this.obj.closest('tr').find('.subjectselector').html(opts).removeAttr("sv");
+                    if (slctd) this.obj.closest('tr').find('.subjectselector').trigger('change');
+                }
+            });
+        }
+    }
+    $('.institutionselector').bind('change',limitsubjects);
+    $('.subjectselector').bind('change',limitlevels);
+
+    var interviewer = function(event) {
+        event.preventDefault();
+		$.ajax({
+			type: 'POST',
+			url: '/admin/student/{{record.id}}/assign/' + $('#interviewer').val(),
+			success: function() {
+					$('#status').val('allocated_to_interviewer');
+			    $('#interviewer_saved').show();
+			    setTimeout(function() { $('#interviewer_saved').hide(); }, 3000);
+			}
+		});
+    }
+		{% if not record.data.interviewer or not record.data.interview or not record.data.interview.emailed_date %}
+    $('#interviewer').bind('change',interviewer);
+		{% endif %}
+
+    var promptsave = function() {
+        $('#triggersave').removeClass('btn-success').addClass('btn-warning');
+        $('input, textarea, select').unbind('change',promptsave);
+    };
+    var triggersave = function(event) {
+        event.preventDefault();
+        $('#survey').parsley('validate') ?  $('#save').trigger('click') : alert("You must complete the required fields before saving");
+    };
+    $('#triggersave').bind('click',triggersave);
+    var triggerdelete = function(event) {
+        event.preventDefault();
+        confirm('Are you sure you want to delete this student record?') ? $('#delete').trigger('click') : false;
+    };
+    $('#triggerdelete').bind('click',triggerdelete);
+    $('input, textarea, select').not('#interviewer').bind('change',promptsave);
+
+    var paenotes = function(e) {
+        e.preventDefault();
+        $('.paenote.' + $(this).attr('href')).toggle();
+    }
+    $('.paenotes').bind('click',paenotes);
+
+
+{% elif current_user.do_admin and record and record.archive != 'current' %}
+    $('input, select, textarea').not('#archiveselection').attr('disabled','disabled');
+ 		var movearchive = function(event) {
+				event.preventDefault();
+				var archive = $('#archiveselection').val();
+				var url = window.location.pathname + '/archive/' + archive.replace('/','______');
+				$.ajax({
+					url:url
+				});
+				alert('Record move to ' + archive + '. Please exit this record and go back to manage supporting data.');
+				//setTimeout(function() { window.location = url; }, 2000);
+		}
+ 		$('#move').bind('click',movearchive);
+{% elif current_user.perform_and_manage_interviewers %}
+    $('input, select, textarea').not('#interviewer').attr('disabled','disabled');
+    var interviewer = function(event) {
+        event.preventDefault();
+		$.ajax({
+			type: 'POST',
+			url: '/admin/student/{{record.id}}/assign/' + $('#interviewer').val(),
+			success: function() {
+			    $('#interviewer_saved').show();
+			    setTimeout(function() { $('#interviewer_saved').hide(); }, 3000);
+			}
+		});
+    }
+    $('#interviewer').bind('change',interviewer);
+
+{% else %}
+    $('input, select, textarea').attr('disabled','disabled');
+
+{% endif %}
+
+	$('#gender').bind('change',function(e) {
+	   $('#gender_other').val('').hide();
+	   if ( $('#gender').val() == 'Other' ) $('#gender_other').show();
+	});
+
+});
+</script>
+
+<style>
+.part .well{
+    margin-top:50px;
+}
+.part .hero-unit{
+    margin-top:50px;
+}
+.narrow, .needselect2{
+    width:180px;
+}
+.narrow.datepicker{
+    width:100px;
+}
+input, textarea {
+    width:200px;
+}
+select {
+    width:210px;
+}
+.add-row, .delete-row {
+    width:35px;
+}
+textarea.bigfield{
+    width:350px;
+    height:135px;
+}
+input.bigfield{
+    width:310px;
+    height:150px;
+}
+fieldset{
+    width:900px;
+    margin:0 auto 0 auto;
+    padding:10px;
+    border:1px solid #ccc;
+}
+</style>
+
+<form action="" id="survey" name="survey" method="post" data-validate="parsley">
+<fieldset>
+
+
+
+<!-- the student details page -->
+<div class="part student">
+
+	<div class="row-fluid">
+	    <div class="span12">
+	        <div class="well" style="margin-top:0;">
+	            {% if record %}
+                <h1>Student record for {{record.data.first_name}} {{record.data.last_name}}</h1>
+	            {% else %}
+	            <h1>New student</h1>
+	            {% endif %}
+	        </div>
+	    </div>
+	</div>
+
+	<div class="row-fluid">
+	    <div class="span12">		
+	        <table>
+	            <tbody>
+        	        <tr>
+	                    <td style="text-align:right;padding:6px 10px 0 0;">First name</td>
+                		<td><input type="text" name="first_name" data-required="true"
+                		{% if record %} value="{{record.data.first_name}}"{% endif %}
+                		></td>
+
+	                    <td style="text-align:right;padding:6px 10px 0 100px;">Last name</td>
+                		<td><input type="text" name="last_name" data-required="true"
+                		{% if record %} value="{{record.data.last_name}}"{% endif %}
+                		></td>
+                    </tr>
+        	        <tr>
+	                    <td style="text-align:right;padding:6px 10px 0 0;">Date of birth</td>
+                		<td><input type="text" class="dobdatepicker" name="date_of_birth" data-required="true" data-trigger="keyup change focusout"
+                		{% if record %} value="{{record.data.date_of_birth}}"{% endif %}
+                		></td>
+
+                        {% if record %}
+                        {% if record.data.ucas_number %}
+	                    <td style="text-align:right;padding:6px 10px 0 100px;">UCAS number</td>
+                		<td><input type="text" name="ucas_number" value="{{record.data.ucas_number}}"></td>
+                		{% else %}
+	                    <td style="text-align:right;padding:6px 10px 0 100px;">SCN number</td>
+                		<td><input type="text" name="scn_number" value="{{record.data.scn_number}}"></td>
+                		{% endif %}
+                        {% else %}
+	                    <td style="text-align:right;padding:6px 10px 0 100px;">SCN number</td>
+                		<td><input type="text" name="scn_number"
+                		{% if record %} value="{{record.data.scn_number}}"{% endif %}
+                		></td>
+                		{% endif %}
+                    </tr>
+        	        <tr>
+	                    <td style="text-align:right;padding:6px 10px 0 0;">School</td>
+                		<td><select name="school" data-required="true">
+                		    <option></option>
+                		    {% if record %}{% if record.data.school not in selections.schools %}<option style="color:red;" selected="selected">{{record.data.school}}</option>{% endif %}{% endif %}
+                		    {% for opt in selections.schools %}
+                		        <option
+                		        {% if record %}{% if record.data.school == opt %} selected="selected"{% endif %}{% endif %}
+                		        >{{ opt }}</option>
+                		    {% endfor %}
+                		</select></td>
+
+	                    <td style="text-align:right;padding:6px 10px 0 100px;">School house</td>
+                		<td><input type="text" name="school_house"
+                		{% if record %} value="{{record.data.school_house}}"{% endif %}
+                		></td>
+                    </tr>
+        	        <tr>
+	                    <td style="text-align:right;padding:6px 10px 0 0;">Year group</td>
+                		<td><select name="year" data-required="true">
+                		    <option></option>
+                		    <option
+                		    {% if record %}{% if record.data.year == "Third year" %} selected="selected"{% endif %}{% endif %}
+                		    >Third year</option>
+                		    <option
+                		    {% if record %}{% if record.data.year == "Fourth year" %} selected="selected"{% endif %}{% endif %}
+                		    >Fourth year</option>
+                		    <option                		    
+                		    {% if record %}{% if record.data.year == "Fifth year" %} selected="selected"{% endif %}{% endif %}
+                            >Fifth year</option>
+                		    <option
+                		    {% if record %}{% if record.data.year == "Sixth year" %} selected="selected"{% endif %}{% endif %}
+                		    >Sixth year</option>
+                		    <option
+                		    {% if record %}{% if record.data.year == "Other" %} selected="selected"{% endif %}{% endif %}
+                		    >Other</option>
+                		</select></td>
+
+	                    <td style="text-align:right;padding:6px 10px 0 100px;">Gender</td>
+                		<td>
+                		    <select name="gender" id="gender">
+                    		    <option></option>
+                    		    <option value="Male"
+                    		    {% if record %}{% if record.data.gender == "Male" %} selected="selected"{% endif %}{% endif %}
+                    		    >Man / Male (including trans man)</option>
+                    		    <option value="Female"
+                    		    {% if record %}{% if record.data.gender == "Female" %} selected="selected"{% endif %}{% endif %}
+                    		    >Woman / Female (including trans woman)</option>
+                    		    <option value="Other"
+								{% if record %}{% if record.data.gender == "Other" %} selected="selected"{% endif %}{% endif %}
+								>In another way</option>
+                    		    <option value="Do not wish to disclose"
+    	                   		{% if record %}{% if record.data.gender == "Do not wish to disclose" %} selected="selected"{% endif %}{% endif %}
+								>Prefer not to say</option>
+                		    </select>
+                		    <p id="gender_other"{% if not record or record.data.gender != "Other" %} style="display:none"{% endif %}>
+                		        Describe gender identity here, 
+                		        or leave blank to record it as "Other": <br>
+                    		    <input type="text" class="form-control" name="gender_other"{% if record %} value="{{record.data.gender_other}}"{% endif %}>
+                    		</p>
+                		</td>
+                    </tr>
+        	        <tr>
+	                    <td style="text-align:right;padding:6px 10px 0 0;">Email address</td>
+                		<td><input type="text" name="email"
+                		{% if record %} value="{{record.data.email}}"{% endif %}
+                		></td>
+
+	                    <td style="text-align:right;padding:6px 10px 0 100px;">Address</td>
+                		<td><input type="text" name="address_line_1"
+                		{% if record %} value="{{record.data.address_line_1}}"{% endif %}
+                		></td>
+                    </tr>
+        	        <tr>
+	                    <td style="text-align:right;padding:6px 10px 0 0;">Home phone</td>
+                		<td><input type="text" name="home_phone"
+                		{% if record %} value="{{record.data.home_phone}}"{% endif %}
+                		></td>
+
+	                    <td style="text-align:right;padding:6px 10px 0 100px;">...</td>
+                		<td><input type="text" name="address_line_2"
+                		{% if record %} value="{{record.data.address_line_2}}"{% endif %}
+                		></td>
+                    </tr>
+        	        <tr>
+	                    <td style="text-align:right;padding:6px 10px 0 0;">Mobile phone</td>
+                		<td><input type="text" name="mobile_phone"
+                		{% if record %} value="{{record.data.mobile_phone}}"{% endif %}
+                		></td>
+
+	                    <td style="text-align:right;padding:6px 10px 0 100px;">City</td>
+                		<td><input type="text" name="city"
+                		{% if record %} value="{{record.data.city}}"{% endif %}
+                		></td>
+                    </tr>
+        	        <tr>
+        	            <td></td>
+        	            <td></td>
+
+	                    <td style="text-align:right;padding:6px 10px 0 100px;">Region</td>
+                		<td colspan="3"><input type="text" name="region"
+                		{% if record %} value="{{record.data.region}}"{% endif %}
+                		></td>
+                    </tr>
+        	        <tr>
+	                    <td style="text-align:right;padding:6px 10px 0 0;">
+	                        Agree to <br>
+                            <a target="_blank" href="/policy">data policy</a>
+	                    </td>
+                		<td><select name="data_policy_agreement">
+                		    <option></option>
+                		    <option
+                		    {% if record %}{% if record.data.data_policy_agreement == "Yes" %} selected="selected"{% endif %}{% endif %}
+                		    >Yes</option>
+                		</select></td>
+                    
+	                    <td style="text-align:right;padding:6px 10px 0 100px;">Post code</td>
+                		<td><input type="text" name="post_code" data-required="true"
+                		{% if record %} value="{{record.data.post_code}}"{% endif %}
+                		></td>
+                    </tr>
+        	        <tr>
+        	            <td></td>
+        	            <td></td>
+	                    <td style="text-align:right;padding:6px 10px 0 100px;">SIMD %</td>
+                		<td>
+											{% if record %}<p style="padding-top:5px;">{{record.data.simd_pc}}</p>{% endif %}
+                		</td>
+                    </tr>
+                </tbody>
+	        </table>
+	    </div>
+	</div>
+
+    <hr></hr>
+
+    {% if record %}
+	<div class="row-fluid">
+	    <div class="span12">		
+	        <table>
+	            <tbody>
+	                <tr style="display:none;">
+	                    <td style="text-align:right;padding:6px 10px 0 0;">Local authority</td>
+                		<td><select name="local_authority">
+                		    <option></option>
+                		    {% if record %}{% if record.data.local_authority not in selections.local_authorities %}<option style="color:red;" selected="selected">{{record.data.local_authority}}</option>{% endif %}{% endif %}
+                		    {% for opt in selections.local_authorities %}
+                		        <option
+                		        {% if record %}{% if record.data.local_authority == opt %} selected="selected"{% endif %}{% endif %}
+                		        >{{ opt }}</option>
+                		    {% endfor %}
+                		</select></td>
+
+	                    <td style="text-align:right;padding:6px 10px 0 100px;">LEAPS category</td>
+                		<td>
+                		    <select name="leaps_category">
+                		    <option></option>
+                		    {% if record %}{% if record.data.leaps_category not in selections.leaps_categories %}<option style="color:red;" selected="selected">{{record.data.leaps_category}}</option>{% endif %}{% endif %}
+                		    {% for opt in selections.leaps_categories %}
+                		        <option
+                		        {% if record %}{% if record.data.leaps_category == opt %} selected="selected"{% endif %}{% endif %}
+                		        >{{ opt }}</option>
+                		    {% endfor %}
+                		    </select>
+                    		<p style="display:inline;margin-left:5px;"><input type="checkbox" name="shep_school"
+                    		{% if record %}{% if record.data.shep_school %} checked="checked"{% endif %}{% endif %}
+                    		> SHEP school</p>
+                		</td>
+                    </tr>
+                    
+                    <tr style="display:none;">
+	                    <td style="text-align:right;padding:6px 10px 0 0;">SIMD decile</td>
+                		<td><select name="simd_decile">
+                		    <option></option>
+                		    {% if record %}{% if record.data.simd_decile not in selections.simd_deciles %}<option style="color:red;" selected="selected">{{record.data.simd_decile}}</option>{% endif %}{% endif %}
+                		    {% for opt in selections.simd_deciles %}
+                		        <option
+                		        {% if record %}{% if record.data.simd_decile == opt %} selected="selected"{% endif %}{% endif %}
+                		        >{{ opt }}</option>
+                		    {% endfor %}
+                		</select></td>
+	                    <td style="text-align:right;padding:6px 10px 0 100px;">SIMD quintile</td>
+                		<td><select name="simd_quintile">
+                		    <option></option>
+                		    {% if record %}{% if record.data.simd_quintiles not in selections.simd_quintiles %}<option style="color:red;" selected="selected">{{record.data.simd_quintile}}</option>{% endif %}{% endif %}
+                		    {% for opt in selections.simd_quintiles %}
+                		        <option
+                		        {% if record %}{% if record.data.simd_quintile == opt %} selected="selected"{% endif %}{% endif %}
+                		        >{{ opt }}</option>
+                		    {% endfor %}
+                		</select></td>
+                    </tr>
+                    
+
+                    <tr>
+	                    <td style="text-align:right;padding:6px 10px 0 0;">Status</td>
+                		<td><select id="status" name="status">
+                		    {% if record %}{% if record.data.status not in ["new", "not_eligible_interviewed", "not_eligible_not_interviewed", "not_applying_interviewed", "not_applying_not_interviewed", "allocated_to_interviewer", "awaiting_interview", "interviewed", "absent", "query", "paes_requested", "paes_in_progress", "paes_complete", "complete"] %}<option style="color:red;" selected="selected">{{record.data.status}}</option>{% endif %}{% endif %}
+                		    <option>new</option>
+              		        <option{% if record %}{% if record.data.status == "not_eligible_interviewed" %} selected="selected"{% endif %}{% endif %}>not_eligible_interviewed</option>
+              		        <option{% if record %}{% if record.data.status == "not_eligible_not_interviewed" %} selected="selected"{% endif %}{% endif %}>not_eligible_not_interviewed</option>
+              		        <option{% if record %}{% if record.data.status == "not_applying_interviewed" %} selected="selected"{% endif %}{% endif %}>not_applying_interviewed</option>
+              		        <option{% if record %}{% if record.data.status == "not_applying_not_interviewed" %} selected="selected"{% endif %}{% endif %}>not_applying_not_interviewed</option>
+              		        <option{% if record %}{% if record.data.status == "allocated_to_interviewer" %} selected="selected"{% endif %}{% endif %}>allocated_to_interviewer</option>
+              		        <option{% if record %}{% if record.data.status == "awaiting_interview" %} selected="selected"{% endif %}{% endif %}>awaiting_interview</option>
+              		        <option{% if record %}{% if record.data.status == "interviewed" %} selected="selected"{% endif %}{% endif %}>interviewed</option>
+              		        <option{% if record %}{% if record.data.status == "absent" %} selected="selected"{% endif %}{% endif %}>absent</option>
+              		        <option{% if record %}{% if record.data.status == "query" %} selected="selected"{% endif %}{% endif %}>query</option>
+              		        <option{% if record %}{% if record.data.status == "paes_requested" %} selected="selected"{% endif %}{% endif %}>paes_requested</option>
+              		        <option{% if record %}{% if record.data.status == "paes_in_progress" %} selected="selected"{% endif %}{% endif %}>paes_in_progress</option>
+              		        <option{% if record %}{% if record.data.status == "paes_complete" %} selected="selected"{% endif %}{% endif %}>paes_complete</option>
+              		        <option{% if record %}{% if record.data.status == "complete" %} selected="selected"{% endif %}{% endif %}>complete</option>
+                		</select></td>
+
+	                    <td style="text-align:right;padding:6px 10px 0 0;">Archive</td>
+	                		<td>
+													<select id="archiveselection" name="archive">
+													{% for opt in selections.archives %}
+															<option
+															{% if record %}
+																	{% if record.data.archive == opt %} selected="selected"{% endif %}
+															{% else %}
+																	{% if opt == "current" %} selected="selected"{% endif %}
+															{% endif %}
+															>{{ opt }}</option>
+													{% endfor %}
+													</select>
+													{% if current_user.do_admin and record and record.archive != 'current' %}
+													<a id="move" class="btn" href="#" style="margin-top:-4px;">Move</a>
+													{% endif %}
+											</td>
+                    </tr>
+
+                    <tr style="height:30px;">
+	                    <td style="text-align:right;padding:6px 10px 0 0;">Created date</td>
+                		<td>
+                		    <input type="hidden" name="created_date" value="{{record.data.created_date}}">
+                		    <p style="padding-top:5px;">{{record.data.created_date}}<br>ID: {{record.data.id}}</p>
+                		</td>
+	                    <td style="text-align:right;padding:6px 10px 0 100px;">Last updated</td>
+                		<td><p style="padding-top:5px;">{{record.data.last_updated}}</p></td>
+                    </tr>
+
+                </tbody>
+	        </table>
+	    </div>
+	</div>
+	{% endif %}
+
+</div>
+
+
+
+
+<!-- the qualifications page -->
+<div class="part qualifications">
+
+	<div class="row-fluid">
+	    <div class="span12">
+	        <div class="well">
+	            <h1>Qualifications</h1>
+							{% if current_user.edit_students and (not record or record.archive == 'current') %}
+							<p>NOTE: If you edit qualifications, any application PAEs already requested will retain 
+								the old qualifications details. If you wish to isue a new PAE for an application with 
+								new qualifications data, you should save the new qualifications data then create a new 
+								application (or applications) in the section below, and after saving those you will be 
+								able to request a new PAE for them. The new PAE will use the latest qualifications data.
+							</p>
+							{% endif %}
+	        </div>
+	    </div>
+	</div>
+
+	<div class="row-fluid">
+	    <div class="span12">		
+
+	        <table class="multidisplay editablerows">
+                <thead>
+                    <tr>
+                        <th>Subject</th>
+                        <th>School year taken</th>
+                        <th>Level of qualification</th>
+                        <th>Grade</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if record %}
+                        {% for qual in record.data.qualifications %}
+                    <tr>
+                		<td><input type="hidden" name="qualification_subject" value="{{qual.subject}}"><input type="text" disabled="disabled" value="{{qual.subject}}" style="width:170px;"></td>
+                		<td><input type="hidden" name="qualification_year" value="{{qual.year}}"><input type="text" disabled="disabled" value="{{qual.year}}"></td>
+                		<td><input type="hidden" name="qualification_level" value="{{qual.level}}"><input type="text" disabled="disabled" value="{{qual.level}}" style="width:140px;"></td>
+                		<td><input type="hidden" name="qualification_grade" value="{{qual.grade}}"><input type="text" disabled="disabled" value="{{qual.grade}}"></td>
+                    </tr>
+
+                        {% endfor %}
+                    {% endif %}
+
+                </tbody>
+            </table>
+
+{% if current_user.edit_students and (not record or record.archive == 'current') %}
+	        <table class="multi">
+                <tbody>                    
+                    <tr>
+                		<td><select name="qualification_subject" class="needselect2">
+                		    <option></option>
+                		    {% for opt in selections.subjects %}
+                		        <option>{{ opt }}</option>
+                		    {% endfor %}
+                		</select></td>
+                		<td><select name="qualification_year">
+                		    <option></option>
+                		    <option>Third year</option>
+                		    <option>Fourth year</option>
+                		    <option>Fifth year</option>
+                		    <option>Sixth year</option>
+                		    <option>Other</option>
+                		</select></td>
+                		<td><select name="qualification_level" style="width:150px;">
+                		    <option></option>
+                		    {% for opt in selections.levels %}
+                		        <option>{{ opt }}</option>
+                		    {% endfor %}
+                		</select></td>
+                		<td><select name="qualification_grade">
+                		    <option></option>
+                		    {% for opt in selections.grades %}
+                		        <option>{{ opt }}</option>
+                		    {% endfor %}
+                		</select></td>
+                    </tr>
+                </tbody>
+	        </table>
+{% endif %}
+
+	    </div>
+	</div>
+
+</div>
+
+
+
+        
+
+
+
+<!-- the applications page -->
+<div class="part applications">
+
+    
+	<div class="row-fluid">
+	    <div class="span12">
+	        <div class="well">
+	            <h1>Applications</h1>
+	        </div>
+	    </div>
+	</div>
+
+
+	<div class="row-fluid">
+	    <div class="span12">		
+	        <table class="multidisplay isapplications editablerows">
+                <thead>
+                    <tr>
+                        <th style="min-width:200px;">College / University</th>
+                        <th style="min-width:150px;">Subject</th>
+                        <th style="min-width:100px;">Level of study</th>
+                        <th style="min-width:200px;">PAE requested / replied / emailed</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if record %}
+                        {% for app in record.data.applications %}
+                		{% if app['pae_requested'] %}
+                    <tr class="noedit">
+                        {% else %}
+                    <tr>
+                        {% endif %}
+                		<td><input class="noclone" type="hidden" name="application_institution" value="{% if app.institution %}{{app.institution}}{% endif %}"><input type="text" disabled="disabled" value="{{app.institution}}" style="width:170px;"></td>
+                		<td><input class="noclone" type="hidden" name="application_subject" value="{% if app.subject %}{{app.subject}}{% endif %}"><input type="text" disabled="disabled" value="{{app.subject}}" style="width:170px;"></td>
+                		<td>
+                   		    <input class="noclone" type="hidden" name="application_level" value="{% if app.level %}{{app.level}}{% endif %}">
+                		    <input type="text" disabled="disabled" value="{{app.level}}" style="width:100px;">
+                   		    <input class="noclone noedit" type="hidden" name="application_appid" value="{% if app.appid %}{{app.appid}}{% endif %}">
+                   		    <input class="noclone noedit" type="hidden" name="application_pae_reply_received" value="{% if app.pae_reply_received %}{{app.pae_reply_received}}{% endif %}">
+                   		    <input class="noclone noedit" type="hidden" name="application_pae_emailed" value="{% if app.pae_emailed %}{{app.pae_emailed}}{% endif %}">
+                   		    <input class="noclone noedit" type="hidden" name="application_consider" value="{% if app.consider %}{{app.consider}}{% endif %}">
+                   		    <input class="noclone noedit" type="hidden" name="application_conditions" value="{% if app.conditions %}{{app.conditions}}{% endif %}">
+                   		    <input class="noclone noedit" type="hidden" name="application_summer_school" value="{% if app.summer_school %}{{app.summer_school}}{% endif %}">
+                   		    <input class="noclone noedit" type="hidden" name="application_qid" value="{% if app.qid %}{{app.qid}}{% endif %}">
+                		</td>
+                		
+                		{% if app['pae_requested'] %}
+                		<td class="noclone noedit">
+                   		    <input class="noclone" type="hidden" name="application_pae_requested" value="{{app.pae_requested}}">
+                		    <span style="margin:5px 5px 0 5px;">
+                		    {% if current_user.view_admin %}<a class="btn" href="/universities/pae/{{app.appid}}">{{ app['pae_requested'] }}</a>{% endif %}
+                		    {% if app.pae_reply_received %}
+                    		    {{ app.pae_reply_received }}
+                    		{% else %}
+                    		    no reply
+                    		{% endif %}                		    
+                		    {% if app.pae_emailed %}
+                    		    - {{ app.pae_emailed }}
+                    		{% else %}
+                    		    - not yet   
+                    		{% endif %}                		    
+                		    </span>
+                		</td>
+                		{% elif current_user.do_admin %}
+                		<td class="noedit">
+                        <select name="application_pae_requested"><option>No</option><option>Yes</option></select>
+                		{% if app['pae_reply_received'] %} *{% endif %}
+                		</td>
+                		{% else %}
+                		<td class="noedit">
+               		    <input class="noclone" type="hidden" name="application_pae_requested" value="">
+               		    </td>
+                		{% endif %}
+                		<td class="noedit">
+               		    <a class="btn btn-info paenotes" href="{{app.appid}}">Notes</a>
+               		    <textarea class="bigfield noclone paenote {{app.appid}}" style="display:none;" name="application_notes">{% if app.notes %}{{app.notes}}{% endif %}</textarea>
+                        </td>
+                    </tr>
+                        {% endfor %}
+                    {% endif %}
+                </tbody>
+            </table>
+
+{% if current_user.do_admin and (not record or record.archive == 'current') %}
+	        <table class="multi">
+                <tbody>
+                    <tr>
+                		<td><select name="application_institution" class="needselect2 institutionselector">
+                		    <option></option>
+                		    {% for opt in selections.institutions %}
+                		        <option>{{ opt }}</option>
+                		    {% endfor %}
+                		</select></td>
+                		<td><select name="application_subject" class="needselect2 subjectselector">
+                		    <option></option>
+                		    {% for opt in selections.advancedsubjects %}
+                		        <option>{{ opt }}</option>
+                		    {% endfor %}
+                		</select></td>
+                		<td><select name="application_level" class="levelselector" style="width:100px;">
+                		    <option></option>
+                		    {% for opt in selections.advancedlevels %}
+                		        <option>{{ opt }}</option>
+                		    {% endfor %}
+                		</select></td>
+                		<td></td>
+                    </tr>
+                </tbody>
+	        </table>
+{% endif %}
+	        
+	    </div>
+	</div>
+
+</div>
+
+
+
+
+
+
+        
+
+<!-- the interests page -->
+<div class="part interests">
+
+    
+	<div class="row-fluid">
+	    <div class="span12">
+	        <div class="well">
+	            <h1>Interests</h1>
+	        </div>
+	    </div>
+	</div>
+
+	<div class="row-fluid">
+	    <div class="span12">		
+	        <table class="multi">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Brief Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                    {% if record %}
+                        {% for int in record.data.interests %}
+                    <tr>
+                		<td><input type="text" name="interest_title" value="{{int.title}}"></td>
+                		<td><textarea class="bigfield" name="interest_brief_description">{{int.brief_description}}</textarea></td>
+                    </tr>
+
+                        {% endfor %}
+                    {% endif %}
+
+{% if current_user.edit_students and (not record or record.archive == 'current') %}
+                    <tr>
+                		<td><input type="text" name="interest_title"></td>
+                		<td><textarea class="bigfield" name="interest_brief_description"></textarea></td>
+                    </tr>
+{% endif %}
+                </tbody>
+	        </table>
+	    </div>
+	</div>
+
+</div>
+
+
+
+
+
+
+        
+
+
+<!-- the experience page -->
+<div class="part experience">
+
+    
+	<div class="row-fluid">
+	    <div class="span12">
+	        <div class="well">
+	            <h1>Experience</h1>
+	        </div>
+	    </div>
+	</div>
+
+	<div class="row-fluid">
+	    <div class="span12">		
+	        <table class="multi">
+                <thead>
+                    <tr>
+                        <th>Date from</th>
+                        <th>Date to
+                        <br><span style="font-weight:normal;font-size:10px;">blank if ongoing</span></th>
+                        <th>Job title</th>
+                        <th>Brief Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                    {% if record %}
+                        {% for exp in record.data.experience %}
+                    <tr>
+                		<td><input type="text" class="datepicker narrow" name="experience_date_from" value="{{exp.date_from}}"></td>
+                		<td><input type="text" class="datepicker narrow" name="experience_date_to" value="{{exp.date_to}}"></td>
+                		<td><input type="text" class="narrow" name="experience_title" value="{{exp.title}}"></td>
+                		<td><textarea class="bigfield" name="experience_brief_description">{{exp.brief_description}}</textarea></td>
+                    </tr>
+
+                        {% endfor %}
+                    {% endif %}
+
+{% if current_user.edit_students and (not record or record.archive == 'current') %}
+                    <tr>
+                		<td><input type="text" class="datepicker narrow" name="experience_date_from"></td>
+                		<td><input type="text" class="datepicker narrow" name="experience_date_to"></td>
+                		<td><input type="text" class="narrow" name="experience_title"></td>
+                		<td><textarea class="bigfield" name="experience_brief_description"></textarea></td>
+                    </tr>
+{% endif %}
+                </tbody>
+	        </table>
+	    </div>
+	</div>
+
+</div>
+
+
+
+
+
+
+
+<!-- the extra page -->
+<div class="part extra">
+
+    
+	<div class="row-fluid">
+	    <div class="span12">
+	        <div class="well">
+	            <h1>Extra academic information</h1>
+	        </div>
+	    </div>
+	</div>
+
+	<div class="row-fluid">
+	    <div class="span12">		
+	        <table>
+                <tbody>
+    				{% if record %}{% if record.data.late_decision_to_apply %}
+        	        <tr>
+	                    <td style="text-align:right;padding:6px 10px 0 0;">Did you make a late decision to consider higher education?</td>
+                		<td><select name="late_decision_to_apply">
+                		    <option></option>
+                		    <option
+                		    {% if record %}{% if record.data.late_decision_to_apply == "No" %} selected="selected"{% endif %}{% endif %}
+                		    >No</option>
+                		    <option
+                		    {% if record %}{% if record.data.late_decision_to_apply == "Yes" %} selected="selected"{% endif %}{% endif %}                		    
+                		    >Yes</option>
+                		</select></td>
+                    </tr>
+					{% endif %}{% endif %}
+					{% if record %}{% if record.data.had_recent_careers_interview %}
+        	        <tr>
+	                    <td style="text-align:right;padding:6px 10px 0 0;">Have you had a careers interview in the last 3 months?</td>
+                		<td><select name="had_recent_careers_interview">
+                		    <option></option>
+                		    <option
+                		    {% if record %}{% if record.data.had_recent_careers_interview == "No" %} selected="selected"{% endif %}{% endif %}
+                		    >No</option>
+                		    <option
+                		    {% if record %}{% if record.data.had_recent_careers_interview == "Yes" %} selected="selected"{% endif %}{% endif %}
+                		    >Yes</option>
+                		</select></td>
+                    </tr>
+					{% endif %}{% endif %}
+                    <tr>
+                        <td style="text-align:right;padding:6px 10px 0 0;">List any additional qualifications not already mentioned</td>
+                        <td><textarea class="bigfield" name="additional_qualifications">{% if record %}{{record.data.additional_qualifications}}{% endif %}</textarea></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:right;padding:6px 10px 0 0;">Describe any issues affecting academic performance</td>
+                        <td><textarea class="bigfield" name="issues_affecting_performance">{% if record %}{{record.data.issues_affecting_performance}}{% endif %}</textarea></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:right;padding:6px 10px 0 0;">Please describe any career plans you may have</td>
+                        <td><textarea class="bigfield" name="career_plans">{% if record %}{{record.data.career_plans}}{% endif %}</textarea></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:right;padding:6px 10px 0 0;">Do you have any particular queries or concerns that you would like covered at your LEAPS Interview?</td>
+                        <td><textarea class="bigfield" name="particular_queries">{% if record %}{{record.data.particular_queries}}{% endif %}</textarea></td>
+                    </tr>
+                </tbody>
+	        </table>
+	    </div>
+	</div>
+
+</div>
+
+
+
+
+<!-- the interview section -->
+<div class="part interview">
+
+    
+	<div class="row-fluid">
+	    <div class="span12">
+	        <div class="well">
+	            <h1>LEAPS Interview</h1>
+	        </div>
+	    </div>
+	</div>
+
+	<div class="row-fluid">
+	    <div class="span12">
+	        <p>
+	            Interviewer: 
+							{% if record.data.interviewer and record.data.interview and record.data.interview.completed_date %}
+								<input type="hidden" name="interviewer" value="{{ record.data.interviewer }}">
+								{{ record.data.interviewer }}
+							{% else %}
+								<select name="interviewer" id="interviewer">
+									<option></option>
+								{% if record %}{% if record.data.interviewer %}{% if record.data.interviewer not in interviewers %}<option style="color:red;" selected="selected">{{record.data.interviewer}}</option>{% endif %}{% endif %}{% endif %}
+								{% for opt in interviewers %}
+									<option
+									{% if record %}
+										{% if record.data.interviewer == opt %} selected="selected"{% endif %}
+									{% endif %}
+									>{{ opt }}</option>
+								{% endfor %}
+								</select>
+							{% endif %}
+				{% if record %}
+				    {% if record.data.interviewer %}
+    		    		<a class="btn btn-info" style="margin-top:-10px;" target="_blank" href="/interviews/{{ record.data.id }}/form">View interview admin form</a>
+    				    {% if record.data.interview is defined %}{% if record.data.interview.form_date %}
+                            <a class="btn btn-info" style="margin-top:-10px;" target="_blank" href="/interviews/{{ record.data.id }}/plan.pdf">View / print action plan</a>
+        				{% endif %}{% endif %}
+        				{% if record.data.interview is defined %}
+										{% if record.data.interview.emailed_date %}
+												Action plan emailed on {{ record.data.interview.emailed_date }}
+										{% else %}
+												{% if record.data.interview.completed_date %}
+														Completed on {{ record.data.interview.completed_date }}
+												{% endif %}
+												{% if record.data.interview.completed_date %}
+														{% if current_user.do_admin %}
+																<!--<a class="btn btn-info" style="margin-top:-10px;" href="/interviews/{{ record.data.id }}/email">Email action plan</a>-->
+														{% endif %}
+        				        {% endif %}
+        				    {% endif %}
+        				{% endif %}
+    				{% endif %}
+    			{% endif %}
+	        </p>
+	        <p id="interviewer_saved" style="display: none;">Success, this student has been assigned to the selected interviewer.</p>
+	        <table>
+	            <tbody>
+	                <tr>
+	                    <td><input type="checkbox" name="transition_course_taking"{% if record %}{% if record.data.transition_course_taking %} checked="checked"{% endif %}{% endif %}> Transitions course - currently taking</td>
+	                    <td><input type="checkbox" name="transition_course_withdrawn"{% if record %}{% if record.data.transition_course_withdrawn %} checked="checked"{% endif %}{% endif %}> Transitions course - withdrawal</td>
+	                    <td><input type="checkbox" name="transition_course_credits"{% if record %}{% if record.data.transition_course_credits %} checked="checked"{% endif %}{% endif %}> Transitions course - completed with credits</td>
+	                    <td><input type="checkbox" name="transition_course_no_credits"{% if record %}{% if record.data.transition_course_no_credits %} checked="checked"{% endif %}{% endif %}> Transitions course - finished without credits</td>
+	                </tr>
+        	        <tr>
+        	            {% if record %}<input type="hidden" name="claimed_first_attending_university" value="{{record.data.claimed_first_attending_university}}">{% endif %}
+                		<!-- this was designed as a way to show on the admin screen that a claim had been made, but LEAPS don't want that to show on admin, only on interview, so commented out in case could be added later -->
+                		<!--<td style="width:230px;{% if record %}{% if record.data.claimed_first_attending_university %}text-decoration:underline;font-weight:bold;{% endif %}{% endif %}"><input type="checkbox" name="first_attending_university"-->
+                		<td style="width:230px;"><input type="checkbox" name="first_attending_university"
+                		{% if record %}{% if record.data.first_attending_university %} checked="checked"{% endif %}{% endif %}
+                		> First attending university</td>
+
+                		<td style="width:250px;"><input type="checkbox" name="early_application"
+                		{% if record %}{% if record.data.early_application %} checked="checked"{% endif %}{% endif %}
+                		> Early application</td>
+
+                        <td style="width:230px;"><input type="checkbox" name="hn_only_candidate"
+                		{% if record %}{% if record.data.hn_only_candidate %} checked="checked"{% endif %}{% endif %}
+                		> HN considered candidate</td>
+
+                        <td style="display:none;"><input type="checkbox" name="transition_course"
+            		    {% if record %}{% if record.data.transition_course %} checked="checked"{% endif %}{% endif %}
+            		    > Transition course</td>
+                    </tr>
+        	        <tr>
+        	            {% if record %}<input type="hidden" name="claimed_looked_after_child" value="{{record.data.claimed_looked_after_child}}">{% endif %}
+                		<!--<td{% if record %}{% if record.data.claimed_looked_after_child %} style="text-decoration:underline;font-weight:bold;"{% endif %}{% endif %}><input type="checkbox" name="looked_after_child"-->
+                		<td><input type="checkbox" name="looked_after_child"
+                		{% if record %}{% if record.data.looked_after_child %} checked="checked"{% endif %}{% endif %}
+                		> Care experienced</td>
+
+        	            {% if record %}<input type="hidden" name="claimed_low_income_family" value="{{record.data.claimed_low_income_family}}">{% endif %}
+                		<!--<td{% if record %}{% if record.data.claimed_low_income_family %} style="text-decoration:underline;font-weight:bold;"{% endif %}{% endif %}><input type="checkbox" name="low_income_family"-->
+                		<td><input type="checkbox" name="low_income_family"
+                		{% if record %}{% if record.data.low_income_family %} checked="checked"{% endif %}{% endif %}
+                		> Low income family</td>
+
+        	            {% if record %}<input type="hidden" name="claimed_young_carer" value="{{record.data.claimed_young_carer}}">{% endif %}
+                		<!--<td{% if record %}{% if record.data.claimed_young_carer %} style="text-decoration:underline;font-weight:bold;"{% endif %}{% endif %}><input type="checkbox" name="young_carer"-->
+                		<td><input type="checkbox" name="young_carer"
+                		{% if record %}{% if record.data.young_carer %} checked="checked"{% endif %}{% endif %}
+                		> Young carer</td>
+
+        	            {% if record %}<input type="hidden" name="claimed_estranged" value="{{record.data.claimed_estranged}}">{% endif %}
+        	            {% if record %}<input type="hidden" name="claimed_estranged_age" value="{{record.data.claimed_estranged_age}}">{% endif %}
+        	            {% if record %}<input type="hidden" name="claimed_estranged_cared_for" value="{{record.data.claimed_estranged_cared_for}}">{% endif %}
+                        <!--<td{% if record %}{% if record.data.claimed_estranged %} style="text-decoration:underline;font-weight:bold;"{% endif %}{% endif %}><input type="checkbox" name="estranged"-->
+                        <td><input type="checkbox" name="estranged"
+            		    {% if record %}{% if record.data.estranged %} checked="checked"{% endif %}{% endif %}
+            		    > Estranged</td>
+                    </tr>
+                    <tr>
+        	            {% if record %}<input type="hidden" name="claimed_simd20" value="{{record.data.claimed_simd20}}">{% endif %}
+						<td><input type="checkbox" name="simd20"
+						{% if record %}{% if record.data.simd20 %} checked="checked"{% endif %}{% endif %}
+						> SIMD 20</td>
+
+        	            {% if record %}<input type="hidden" name="claimed_group_school" value="{{record.data.claimed_group_school}}">{% endif %}
+        	            <!-- the hidden field above is not the same as the one below, which is ok - students are asked to claim a different question -->
+						<td><input type="checkbox" name="simd40"
+						{% if record %}{% if record.data.simd40 %} checked="checked"{% endif %}{% endif %}
+						> SIMD 40</td>
+						
+        	            {% if record %}<input type="hidden" name="claimed_asylum_refugee" value="{{record.data.claimed_asylum_refugee}}">{% endif %}
+						<td><input type="checkbox" name="asylum_refugee"
+						{% if record %}{% if record.data.asylum_refugee %} checked="checked"{% endif %}{% endif %}
+						> Asylum / refugee
+						</td>
+
+        	            {% if record %}<input type="hidden" name="claimed_s5_interviewed" value="{{record.data.claimed_s5_interviewed}}">{% endif %}
+						<td><input type="checkbox" name="had_s5_interview"
+						{% if record %}{% if record.data.had_s5_interview %} checked="checked"{% endif %}{% endif %}
+						> Had S5 interview
+						</td>
+	
+						<td></td>
+                    </tr>
+
+        	        <tr style="display:none;">
+	                    <td style="text-align:right;padding:6px 10px 0 0;">Mothers occupation</td>
+	                    <td><input type="text" name="mothers_occupation"{% if record %} value="{{ record.data.mothers_occupation }}"{% endif %}></td>
+                    </tr>
+        	        <tr style="display:none;">
+	                    <td style="text-align:right;padding:6px 10px 0 0;">Fathers occupation</td>
+	                    <td><input type="text" name="fathers_occupation"{% if record %} value="{{ record.data.fathers_occupation }}"{% endif %}></td>
+                    </tr>
+        	        <tr>
+	                    <td style="text-align:right;padding:6px 10px 0 0;">Main language at home</td>
+	                    <td><input type="text" name="main_language_at_home"{% if record %} value="{{ record.data.main_language_at_home }}"{% endif %}></td>
+                    </tr>
+
+                    <!-- old ones not used any more -->
+        	        <tr style="display:none;">
+	                    <td style="text-align:right;padding:6px 10px 0 0;">Number of siblings</td>
+                		<td><input type="text" name="number_of_siblings"
+                		{% if record %} value="{{record.data.number_of_siblings}}"{% endif %}
+                		></td>
+                    </tr>
+        	        <tr style="display:none;">
+	                    <td style="text-align:right;padding:6px 10px 0 0;">Place in siblings</td>
+                		<td><input type="text" name="place_in_siblings"
+                		{% if record %} value="{{record.data.place_in_siblings}}"{% endif %}
+                		></td>
+                    </tr>
+        	        <tr style="display:none;">
+	                    <td style="text-align:right;padding:6px 10px 0 0;">Household composition</td>
+                		<td><input type="text" name="household_composition"
+                		{% if record %} value="{{record.data.household_composition}}"{% endif %}
+                		></td>
+                    </tr>
+        	        <tr style="display:none;">
+                		<td style="width:250px;"><input type="checkbox" name="law_application"
+                		{% if record %}{% if record.data.law_application %} checked="checked"{% endif %}{% endif %}
+                		> Law application</td>
+                    </tr>
+        	        <tr style="display:none;">
+                		<td><input type="checkbox" name="previous_interview"
+                		{% if record %}{% if record.data.previous_interview %} checked="checked"{% endif %}{% endif %}
+                		> Previous interview</td>
+                    </tr>
+        	        <tr style="display:none;">
+                        <td><input type="checkbox" name="summer_school"
+            		    {% if record %}{% if record.data.summer_school %}{% if record.data.summer_school == "yes" %} checked="checked"{% endif %}{% endif %}{% endif %}
+            		    > Summer school interest</td>
+                    </tr>
+        	        <tr style="display:none;">
+                		<td><input type="checkbox" name="summer_school_applicant"
+            		    {% if record %}{% if record.data.summer_school_applicant %}{% if record.data.summer_school_applicant == "yes" %} checked="checked"{% endif %}{% endif %}{% endif %}
+            		    > Summer school applicant</td>
+                		<td></td>
+                    </tr>
+        	        <tr style="display:none;">
+                        <td><input type="checkbox" name="pae_action"
+            		    {% if record %}{% if record.data.pae_action %} checked="checked"{% endif %}{% endif %}
+            		    > PAE action</td>
+                    </tr>
+                </tbody>
+            </table>
+	        <table>
+                <thead>
+                    <tr>
+                        <th style="min-width:400px;"><br>LEAPS internal notes (only visible here):</th>
+                        <th><br>Additional comments (will show on PDFs and PAEs):</th>
+                    </tr>
+                </thead>
+	            <tbody>
+        	        <tr>
+                        <td>
+                    		<textarea class="bigfield" name="leaps_notes" placeholder="LEAPS internal notes">{% if record %}{{record.data.leaps_notes}}{% endif %}</textarea>
+                        </td>
+                		<td>
+                    		<textarea class="bigfield" name="additional_comments" placeholder="additional comments (will be shown on all PAEs)">{% if record %}{{record.data.additional_comments}}{% endif %}</textarea>
+                		</td>
+        	        </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+
+
+<!-- the form submission button -->
+{% if current_user.edit_students %}
+<div class="part submit">
+
+    <hr></hr>
+    {% if current_user.edit_students and (not record or record.archive == "current") %}
+	<div class="row-fluid" style="margin-top:30px;">
+	    <div class="span6">
+          	<input id="save" class="btn btn-success span2" style="margin-left:100px;" type="submit" name="submit" value="Save" />
+	    </div>
+	    {% if record and current_user.edit_students %}
+	    <div class="span6">
+    	    <input id="delete" class="btn btn-danger span2" style="margin-left:100px;" type="submit" name="submit" value="Delete">
+	    </div>
+	    {% endif %}
+    </div>
+    {% endif %}
+
+</div>
+{% endif %}
+
+
+
+</fieldset>
+</form>
+
+{% endblock %}
+
+
+    
+

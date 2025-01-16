@@ -1,0 +1,363 @@
+{% extends "leaps/admin/admin-base.html" %}
+
+{% block options %}
+            {% if current_user.edit_students %}
+            <a class="btn btn-primary" href="/admin/student/new">Add new student survey</a>
+            {% endif %}
+
+            <a id="print" class="btn" href="/admin/student/selected.pdf">Print selected</a>
+
+            {% if current_user.edit_students or current_user.perform_and_manage_interviewers %}
+            <br>
+            <a id="interviewers" class="btn btn-primary" href="/admin/assign">Allocate interviewer</a>
+            <select id="assign" style="display: none;">
+                <option></option>
+            {% for name in interviewers %}
+                <option>{{ name }}</option>
+            {% endfor %}
+            </select>
+
+            <a id="statuses" class="btn btn-primary" href="/admin/status">Allocate status</a>
+            <select id="assignstatus" style="display: none;">
+                <option></option>
+            {% for name in ["new", "not_eligible_interviewed", "not_eligible_not_interviewed", "not_applying_interviewed", "not_applying_not_interviewed", "allocated_to_interviewer", "awaiting_interview", "interviewed", "absent", "query", "paes_requested", "paes_in_progress", "paes_complete", "complete"] %}
+                <option>{{ name }}</option>
+            {% endfor %}
+            </select>
+            {% endif %}
+
+
+            {% if current_user.do_admin %}
+            <a id="export" class="btn" href="/admin/export">Export selected</a>
+            {% endif %}
+
+            {% if current_user.do_admin %}
+            <br>
+            <a id="archives" class="btn btn-primary" href="/admin/archive">Archive records</a>
+            <select id="archive" style="display: none;">
+                <option></option>
+            {% for name in archives %}
+                <option>{{ name }}</option>
+            {% endfor %}
+            </select>
+            {% endif %}
+
+{% endblock %}
+
+
+{% block content %}
+
+<script>
+jQuery(document).ready(function() {
+    var getthese = function(event) {
+        event.preventDefault();
+        var selected = [];
+        var qry = $.parseJSON($.fn.facetview.options.querystring);
+        delete qry.fields;
+        if ( $('#selecttotal').is(':checked') ) {
+            qry.size = $.fn.facetview.options.rawdata.hits.total;
+        } else if ( $('#selectall').is(':checked') ) {
+        } else {
+            $('.selectthis').each(function() {
+                $(this).is(':checked') ? selected.push($(this).attr('name').replace("select_","")) : false;
+            });
+        }
+        var loc = $(this).attr('href');
+        loc += '?q=' + JSON.stringify(qry);
+        if ( selected.length > 0 ) {
+            loc += '&selected=' + JSON.stringify(selected);
+        }
+        window.location = loc;
+    }
+    $('#export').bind('click',getthese);
+    $('#print').bind('click',getthese);
+    
+    var interviewers = function(event) {
+        event.preventDefault();
+        var selected = false;
+        $('.selectthis').each(function() {
+            if ($(this).is(':checked')) selected = true;
+        });
+        if (selected) {
+            $('#assign').toggle();
+            $('#assignstatus').toggle();
+            $('#interviewers').toggle();
+        }
+    }
+    $('#interviewers').bind('click',interviewers);
+    var assign = function(event) {
+        event.preventDefault();
+        var selected = [];
+        var qry = $.parseJSON($.fn.facetview.options.querystring);
+        delete qry.fields;
+        if ( $('#selecttotal').is(':checked') ) {
+            qry.size = $.fn.facetview.options.rawdata.hits.total;
+        } else if ( $('#selectall').is(':checked') ) {
+        } else {
+            $('.selectthis').each(function() {
+                if ($(this).is(':checked')) selected.push($(this).attr('name').replace("select_",""));
+            });
+        }
+        var si = $('#assign').val();
+        if (si) {
+            var loc = '/admin/student/assign?interviewer=' + si + '&q=' + JSON.stringify(qry);
+            if ( selected.length > 0 ) loc += '&selected=' + JSON.stringify(selected);
+            window.location = loc;
+        }
+    }
+    $('#assign').bind('change',assign);
+
+    var statuses = function(event) {
+        event.preventDefault();
+        var selected = false;
+        $('.selectthis').each(function() {
+            if ($(this).is(':checked')) selected = true;
+        });
+        if (selected) {
+            $('#assign').toggle();
+            $('#assignstatus').toggle();
+            $('#interviewers').toggle();
+        }
+    }
+    $('#statuses').bind('click', statuses);
+    var assignstatus = function(event) {
+        event.preventDefault();
+        var selected = [];
+        var qry = $.parseJSON($.fn.facetview.options.querystring);
+        delete qry.fields;
+        if ( $('#selecttotal').is(':checked') ) {
+            qry.size = $.fn.facetview.options.rawdata.hits.total;
+        } else if ( $('#selectall').is(':checked') ) {
+        } else {
+            $('.selectthis').each(function() {
+                if ($(this).is(':checked')) selected.push($(this).attr('name').replace("select_",""));
+            });
+        }
+        var si = $('#assignstatus').val();
+        if (si) {
+            var loc = '/admin/student/assign?status=' + si + '&q=' + JSON.stringify(qry);
+            if ( selected.length > 0 ) loc += '&selected=' + JSON.stringify(selected);
+            window.location = loc;
+        }
+    }
+    $('#assignstatus').bind('change',assignstatus);
+
+    var archives = function(event) {
+        event.preventDefault();
+        var selected = false;
+        $('.selectthis').each(function() {
+            if ($(this).is(':checked')) selected = true;
+        });
+        if (selected) {
+            $('#archive').toggle();
+            $('#archives').toggle();
+        }
+    }
+    $('#archives').bind('click',archives);
+    var archive = function(event) {
+        event.preventDefault();
+        var selected = [];
+        var qry = $.parseJSON($.fn.facetview.options.querystring);
+        delete qry.fields;
+        if ( $('#selecttotal').is(':checked') ) {
+            qry.size = $.fn.facetview.options.rawdata.hits.total;
+        } else if ( $('#selectall').is(':checked') ) {
+        } else {
+            $('.selectthis').each(function() {
+                if ($(this).is(':checked')) selected.push($(this).attr('name').replace("select_",""));
+            });
+        }
+        var si = $('#archive').val();
+        if (si) {
+            var loc = '/admin/archive?archive=' + si + '&q=' + JSON.stringify(qry);
+            if ( selected.length > 0 ) loc += '&selected=' + JSON.stringify(selected);
+            window.location = loc;
+        }
+    }
+    $('#archive').bind('change',archive);
+    
+    var post = function() {
+        if ( $('#default_current').length == 0 ) {
+            $('body').append('<div id="default_current" style="display:none;"></div>');
+            $('.facetview_filterchoice[href="current"]').trigger('click');
+            {% if not current_user.do_admin %}
+            $('#facetview_group_archive_exact').hide();
+            {% endif %}
+        } else {
+            /*$('.tablesorter')
+               .unbind('appendCache applyWidgetId applyWidgets sorton update updateCell')
+               .find('thead th')
+               .unbind('click mousedown')
+               .removeClass('header headerSortDown headerSortUp');
+            $(".tablesorter").tablesorter({
+                "headers":{0:{"sorter":false}}
+            });*/
+        }
+        $('#selectall').change(function() {
+            $('.selectthis').attr('checked', $(this).is(':checked'));
+            if ( $(this).is(':checked') ) {
+                if ( $.fn.facetview.options.paging.size < $.fn.facetview.options.rawdata.hits.total ) {
+                    $('#currenttotal').text($.fn.facetview.options.rawdata.hits.total);
+                    $('#selecttotal_option').show();
+                }
+            } else {
+                $('#selecttotal_option').hide();
+                $('#selecttotal').attr('checked',false);
+            }
+        });
+    }
+    
+    $('.facetview').facetview({
+        search_url: '/query/student?',
+        facets: [
+            {'field':'archive.exact', 'display': 'archive', 'size':1000}, 
+            {'field':'school.exact', 'display': 'school', 'size':1000},
+            {'field':'leaps_category.exact', 'display': 'LEAPS category', 'size':1000},
+            {'field':'simd_decile.exact', 'display': 'SIMD decile', 'size':1000},
+            {'field':'status.exact', 'display': 'status', 'size':1000},
+            {'field':'interview.status.exact', 'display': 'Interview status', 'size':1000},
+            {'field':'applications.institution.exact', 'display': 'Application institutions', 'size':1000},
+            {'field':'summer_school.exact', 'display': 'Summer school'},
+            {'field':'interviewer.exact', 'display': 'Interviewer', 'size':100}
+        ],
+        fields: ['last_name', 'first_name', 'date_of_birth','post_code','simd_decile','school','status','archive','id'],
+        paging: {
+            from: 0,
+            size: 100
+        },
+        sort: [{"created_date.exact":{"order":"desc"}}],
+        search_sortby: [
+          {
+            field: "created_date.exact",
+            display: "Created date"
+          },
+          {
+            field: "last_updated.exact",
+            display: "Last updated date"
+          },
+          {
+            field: "last_name",
+            display: "Last name"
+          },
+          {
+            field: "first_name",
+            display: "First name"
+          },
+          {
+            field: "date_of_birth.exact",
+            display: "Date of birth"
+          },
+          {
+            field: "school.exact",
+            display: "School"
+          },
+          {
+            field: "status.exact",
+            display: "Status"
+          }
+        ],
+        pager_on_top: true,
+        sharesave_link: false,
+        default_operator: 'AND',
+        default_freetext_fuzzify: "*",
+        pushstate: true,
+        searchwrap_start: '<table id="facetview_table" class="tablesorter table table-striped table-bordered"><thead><tr><th><input type="checkbox" name="selectall" id="selectall" alt="check / uncheck this to select / deselect all" title="check / uncheck this to select / deselect all" class="filter-false"></th><th>Last name</th><th>First name</th><th>D.O.B</th><th>Post code</th><th>SIMD decile</th><th>School</th><th>Status</th><th>Archive</th></tr></thead><tbody id="facetview_results">',
+        resultwrap_start: '<tr>',
+        resultwrap_end: '</tr>',
+        searchwrap_end: '</tbody></table>',
+        result_display: [
+            [
+                {
+                    "pre": '<td><input type="checkbox" class="selectthis" name="select_',
+                    "field": "id",
+                    "post": '"></td>'
+                },
+                {
+                    "pre": '<td><b><a alt="click to view student record" title="click to view student record" href="/admin/student/',
+                    "field": "id",
+                    "post": '">'
+                },
+                {
+                    "field": "last_name",
+                    "post": '</a></b></td>'
+                },
+                {
+                    "pre": "<td>",
+                    "field": "first_name",
+                    "post": "</td>"
+                },
+                {
+                    "pre": "<td>",
+                    "field": "date_of_birth",
+                    "post": "</td>"
+                },
+                {
+                    "pre": "<td>",
+                    "field": "post_code",
+                    "post": "</td>"
+                },
+                {
+                    "pre": "<td>",
+                    "field": "simd_decile",
+                    "post": "</td>"
+                },
+                {
+                    "pre": "<td>",
+                    "field": "school",
+                    "post": "</td>"
+                },
+                {
+                    "pre": "<td>",
+                    "field": "status",
+                    "post": "</td>"
+                },
+                {
+                    "pre": "<td>",
+                    "field": "archive",
+                    "post": "</td>"
+                }
+            ]
+        ],
+        post_search_callback: post
+    });
+
+    /*if ( $('.tablesorter').length ) {
+        $('.tablesorter')
+           .unbind('appendCache applyWidgetId applyWidgets sorton update updateCell')
+           .find('thead th')
+           .unbind('click mousedown')
+           .removeClass('header headerSortDown headerSortUp');
+        $(".tablesorter").tablesorter({
+            "headers":{0:{"sorter":false}}
+        });
+    }*/
+    //window.onunload = function(){}; // this may help with tablesorter vanishing on page back
+});
+</script>
+
+<div class="row-fluid" style="margin-bottom:10px;">
+    <div class="span12">
+        <h1>Manage student surveys</h1>
+    </div>
+</div>
+
+<div class="row-fluid" id="selecttotal_option" style="display:none;">
+    <div class="span3">
+        <p></p>
+    </div>
+    <div class="span9">
+        <div class="alert">
+            <p style="margin-bottom:0;"><input type="checkbox" name="selecttotal" id="selecttotal"> Select all <span id="currenttotal"></span> records, instead of just the ones on this page.</p>
+        </div>
+    </div>
+</div>
+
+<div class="row-fluid">
+    <div class="span12">
+        <div class="facetview">
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}

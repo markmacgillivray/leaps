@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div id="logo">
+	<img src="/static/leaps_banner.png" alt="A group of students from the Lothians Equal Access Programme for Schools" title="A group of students from the Lothians Equal Access Programme for Schools" />
+</div>
+
+<div class="row-fluid">
+    <div class="span4">
+        &nbsp;
+    </div>
+    <div class="span5">
+    {% from "_formhelpers.html" import render_field %}
+      <form method="post" action="">
+          {{ render_field(form.username, placeholder="your username") }}
+          {{ render_field(form.password, placeholder="********") }}
+        <div class="actions">
+          <input type="submit" value="Login" class="btn btn-primary" />
+        </div>
+      </form>
+      <p><a href="/account/forgot">Forgot your password? Request a new one.</a></p>
+      {% if app.config['PUBLIC_REGISTER'] %}
+      <p><br />No account yet? <a href="{{url_for('account.register')}}">Sign up now &raquo;</a></p>
+      {% endif %}
+    </div>
+</div>
+{% endblock %}
+

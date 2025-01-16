@@ -1,0 +1,997 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<link rel="stylesheet" type="text/css" media="all" href="/static/bootstrap3/bootstrap.min.css" />
+<script type="text/javascript" src="/static/bootstrap3/bootstrap.min.js"></script>
+
+<script>
+jQuery(document).ready(function() {
+    
+    $("[data-required]").attr('data-required-message',"");
+
+    // add a datepicker to all datepicker classes
+    var opts = {
+        inline: true,
+        dateFormat: 'dd/mm/yy',
+        changeYear: true
+    };
+    $('.datepicker').datepicker(opts);
+    var dobopts = {
+        inline: true,
+        dateFormat: 'dd/mm/yy',
+        changeYear: true,
+        yearRange: "-22:+0",
+        defaultDate: '-17y',
+        minDate: '-22y',
+        maxDate: '-12y'
+    };
+    $('.dobdatepicker').datepicker(dobopts);
+    
+    var dobformat = function(event) {
+        event.preventDefault();
+        var datestring = $('#date_of_birth').val();
+        var pattern = /^([0-9]{2})\/([0-9]{2})\/([0-9]{4})$/;
+        if ( pattern.test(datestring) ) {
+            $('.dobwarning').hide();
+            $('#date_of_birth').removeClass('parsley-error').addClass('parsley-validated').addClass('parsley-success');
+        } else {
+            $('.dobwarning').show();
+            $('#date_of_birth').removeClass('parsley-success').removeClass('parsley-validated').addClass('parsley-error');
+        }
+    }
+    $('.checkdob').bind('change',dobformat);
+    var checkschool = function() {
+        var school = $('#school').val().toLowerCase().replace(/[^a-z]/g,'');
+        $('#can_claim_school').hide();
+		$('#can_claim_interviewed').hide();
+        $('#claimed_group_school').prop("checked", false);
+        $('#claimed_group_school').attr("disabled", false);
+        var schools = {{ selections.school_categories|tojson|safe }};
+        if (school && (schools[school] === "1" || schools[school] === "1+")) {
+            $('#can_claim_school').show();
+            $('#can_claim_interviewed').show();
+            $('#claimed_group_school').prop("checked", true);
+            $('#claimed_group_school').attr("disabled", true);
+        }
+    }
+    var checksimd = function() {
+        var postcode = $('#post_code').val().toLowerCase().replace(/ /g,'');
+        $.ajax({
+            cache:false,
+            method:'GET',
+            datatype:'JSON',
+            url:'/query/simd/_search?q=id:"' + postcode + '"&sort=post_code',
+            success: function(data) {
+                $('#can_claim_simd').hide();
+                $('#claimed_simd20').prop("checked", false);
+                $('#claimed_simd20').attr("disabled", false);
+                //$('#claimed_simd40').prop("checked", false);
+                try {
+                    var rec = data.hits.hits[0]._source;
+                    if (['1','2','3','4'].indexOf(rec.simd_decile) !== -1) {
+                        $('#can_claim_simd').show();
+                        if (['1','2'].indexOf(rec.simd_decile) !== -1) {
+                            $('#claimed_simd20').prop("checked", true);
+                            $('#claimed_simd20').attr("disabled", true);
+                        } else {
+                            //$('#claimed_simd40').prop("checked", true);
+                        }
+                    }
+                } catch (err) {}
+            }
+        });
+    }
+    var postcodeformat = function(event) {
+        event.preventDefault();
+        var str = $('#post_code').val().toLowerCase().replace(/ /g,'');
+        var letters = 'abcdefghijklmnopqrstuvwxyz';
+        if ( str.length < 5 || str.length > 8 || letters.indexOf(str[0]) === -1 || letters.indexOf(str[str.length-1]) === -1 || '0123456789'.indexOf(str[2]) === -1) {
+            $('.postcodewarning').show();
+            $('#post_code').removeClass('parsley-success').removeClass('parsley-validated').addClass('parsley-error');
+        } else {
+            $('.postcodewarning').hide();
+            $('#post_code').removeClass('parsley-error').addClass('parsley-validated').addClass('parsley-success');
+            checksimd();
+        }
+    }
+    $('.checkpostcode').bind('change',postcodeformat);
+    $('.checkschool').bind('change',checkschool);
+    var mobileformat = function(event) {
+        event.preventDefault();
+        var str = $('#mobile_phone').val();
+        if (str.length === 0) {
+            $('.mobilewarning').hide();
+            $('#mobile_phone').removeClass('parsley-error').removeClass('parsley-validated').removeClass('parsley-success');
+        } else {
+            try {
+                var n = parseInt(str);
+                if (str.length === 11) {
+                    $('.mobilewarning').hide();
+                    $('#mobile_phone').removeClass('parsley-error').addClass('parsley-success');
+                } else {
+                    $('.mobilewarning').show();
+                    $('#mobile_phone').removeClass('parsley-success').addClass('parsley-error');
+                }
+            } catch(err) {
+                $('.mobilewarning').show();
+                $('#mobile_phone').removeClass('parsley-success').addClass('parsley-error');
+            }
+        }
+    }
+    $('.checkmobile').bind('change',mobileformat);
+
+    $('.select2this').select2();
+
+    var subjects = {{ selections.advancedsubjects|tojson|safe }};
+
+    // function of things to do whenever a row is appended
+    var preprow = function(row) {
+        $(row).find('.delete-row').bind('click',deleterow);
+        $(row).find('select').each(function() {
+            $(this).val("");
+            var opts = [];
+            $(this).find('option').each(function() {
+               opts.push({disabled: $(this).attr('disabled'), value: $(this).attr('value'), name: $(this).html()});
+            });
+            $(this).html("");
+            for ( var o in opts ) {
+                $(this).append('<option' + (opts[o].value !== undefined ? ' value="' + opts[o].value + '"' : '') + (opts[o].disabled ? ' disabled="disabled" selected="selected"' : '') + '>' + opts[o].name + '</option>');
+            }
+        });
+        $(row).find('input').val("");
+        $(row).find('textarea').html("").val("");
+        $(row).find('.datepicker').datepicker("destroy");
+        $(row).find('.datepicker').removeClass("hasDatepicker").removeAttr('id');
+        $(row).find('.datepicker').datepicker(opts);
+        var stext = '<option></option>';
+	    for ( var i = 0; i < subjects.length; i++ ) {
+	        stext += '<option>' + subjects[i] + '</option>';
+	    };
+        $(row).find('.subjectselector').html(stext);
+        $(row).find('.institutionselector').unbind('change',limitsubjects).bind('change',limitsubjects);
+        $(row).find('.subjectselector').unbind('change',limitlevels).bind('change',limitlevels);
+    }
+
+    // add / remove rows to list items
+    $('.row.multi').each(function() {
+        $(this).children().last().append('<p class="hidden-xs">&nbsp;</p><p style="display:none;"><a class="btn btn-block btn-warning delete-row" href="#">delete</a></p><p><a class="btn btn-block btn-success add-row" href="#">add</a></p>');
+    });
+
+    var addrow = function(event) {
+        event.preventDefault();
+        var maxrows = 6;
+        $(this).closest('.row').hasClass('manyrows') ? maxrows = 30 : false;
+        $(this).closest('.row').siblings('.row').length == (maxrows - 1) ? $(this).hide() : false;
+        if ( $(this).closest('.row').siblings('.row').length < maxrows ) {
+            $('.select2this').select2('destroy').removeAttr('id').removeAttr('data-select2-id');
+            var row = $(this).closest('.row').clone(true).get(0);
+            $(this).closest('.row').append('<hr class="visible-xs visible-sm" style="border-color:#bbb;"></hr>');
+            preprow(row);
+            $(row).insertAfter($(this).closest('.row'));
+            $(this).closest('.row').find('.add-row').parent().hide();
+            $(this).closest('.row').find('.delete-row').parent().show();
+            $('.select2this').select2();
+        }
+    }
+    $('.add-row').bind('click',addrow);
+    var deleterow = function(event) {
+        event.preventDefault();
+        var parent = $(this).closest('.row').parent();
+        $(this).closest('.row').remove();
+    }
+    $('.delete-row').bind('click',deleterow);
+
+    var triggersave = function(event) {
+        if ( !$('#survey').parsley('validate') ) {
+            event.preventDefault(); // this also focuses the first wrong element
+        }
+    };
+    $('#triggersave').bind('click',triggersave);
+    
+    var subjectslist = {};
+    try {
+        $.ajax({
+            cache:false,
+            method:'GET',
+            datatype:'JSON',
+            url:'/query/institution/_search?source=' + JSON.stringify({"size":1000, "query": {"query_string": {"query": "subjects.name:*"}}}),
+            success: function(data) {
+                for ( var i in data.hits.hits ) {
+                    var nm = data.hits.hits[i]._source.name;
+                    if (subjectslist[nm] === undefined) subjectslist[nm] = {};
+                    for ( var s in data.hits.hits[i]._source.subjects ) {
+                        var n = data.hits.hits[i]._source.subjects[s].name;
+                        if (subjectslist[nm][n] === undefined) subjectslist[nm][n] = [];
+                        subjectslist[nm][n].push(data.hits.hits[i]._source.subjects[s].level);
+                    }
+                }
+            }
+        });        
+    } catch(err) {}
+
+    var limitlevels = function(event) {
+        var ls = $(this).closest('.row').find('.levelselector');
+        if (ls.hasClass('select2this')) ls.select2('destroy').removeAttr('id').removeAttr('data-select2-id');
+        ls.val("").attr("disabled","disabled");
+        var institution = $(this).closest('.row').find('.institutionselector').val();
+        var subject = $(this).val();
+        var lopts = '<option></option>';
+        if ( subjectslist[institution] !== undefined && typeof subjectslist[institution][subject] === 'object') {
+            for ( var i in subjectslist[institution][subject] ) {
+                lopts += "<option";
+                if (subjectslist[institution][subject].length === 1) lopts += ' selected="selected"'; 
+                lopts += ">" + subjectslist[institution][subject][i] + "</option>";
+            }
+        } else {
+            var levels = {{ selections.advancedlevels|tojson|safe }};
+            for ( var i = 0; i < levels.length; i++ ) {
+                lopts += "<option>" + levels[i] + "</option>";
+            }
+        }
+        ls.html(lopts).removeAttr("disabled");
+        if (ls.hasClass('select2this')) ls.select2();
+    }
+    var limitsubjects = function(event) {
+        var institution = $(this).val();
+        var ss = $(this).closest('.row').find('.subjectselector');
+        if (ss.hasClass('select2this')) ss.select2('destroy').removeAttr('id').removeAttr('data-select2-id');
+        ss.attr("disabled","disabled");
+        var ls = $(this).closest('.row').find('.levelselector');
+        if (ls.hasClass('select2this')) ls.select2('destroy').removeAttr('id').removeAttr('data-select2-id');
+        ls.val("").attr("disabled","disabled");
+        var opts = '<option></option>';
+        if ( institution == "" || subjectslist[institution] === undefined) {
+            for ( var i in subjects ) opts += "<option>" + subjects[i] + "</option>";
+        } else {
+            for ( var i in subjectslist[institution] ) opts += "<option>" + i + "</option>";
+        }
+        ss.html(opts).removeAttr("disabled");
+        if (ss.hasClass('select2this')) ss.select2();
+        if (ls.hasClass('select2this')) ls.select2();
+    }
+    $('.institutionselector').bind('change',limitsubjects);
+    $('.subjectselector').bind('change',limitlevels);
+    
+	var allgrades = ''
+    var limitqualifications = function(event) {
+		var yr = $(this).val();
+		var qs = $(this).closest('.row').find('.qualificationgrades').last();
+		if (yr == 'Sixth year') {
+			if (allgrades === '') allgrades = qs.html();
+			qs.html('<option value="" disabled="disabled" selected="selected">select Grade</option><option value="Currently sitting">Currently sitting</option><option value="Resit">Resit</option>');
+		} else if (allgrades) {
+			qs.html(allgrades);
+		}
+    }
+    $('.qualificationselector').bind('change',limitqualifications);
+
+
+	// auto-add four rows each for fourth fifth and sixth year to quals section
+	for (var i = 0; i < 11; i++) {
+		$('.manyrows').last().find('.add-row').trigger('click');
+	}
+	$('.qualificationselector').each(function (i) {
+		var yr = i < 4 ? 'Fourth' : i < 8 ? 'Fifth' : 'Sixth'
+		var oh = $(this).html();
+		oh = oh.replace(' selected="selected"', '').replace('"' + yr + ' year"', '"' + yr + ' year" selected="selected"');
+		$(this).html(oh);
+		if (i > 7) $(this).trigger('change');
+	});
+	$('.qualificationselector').first().val('Fourth year');
+
+	function checkKeys(e){
+		 e = e || event;
+		 var txtArea = /textarea/i.test((e.target || e.srcElement).tagName);
+		 return txtArea || ( (e.keyCode || e.which || e.charCode || 0) !== 13 && (e.keyCode || e.which || e.charCode || 0) !== 8 && e.type !== 'text');
+	}
+	document.querySelector('form').onkeypress = checkKeys;
+	
+	$('#gender').bind('change',function(e) {
+	   $('#gender_other').val('');
+	   $('#show_gender_other').hide();
+	   if ( $('#gender').val() == 'Other' ) $('#show_gender_other').show();
+	});
+	
+	$('select').bind('change', function() { $(this).closest('.pregrey').removeClass('pregrey'); $(this).css({color: '#555'}); });
+
+	$('#claimed_estranged').bind('change', function() {
+	   $('#more_estranged').hide();
+	   if ( $('#claimed_estranged').is(':checked') ) $('#more_estranged').show();
+	});
+});
+</script>
+
+<style>
+#container {
+    width: none;
+}
+hr {
+    border-color:#333;
+}
+h2 {
+    margin-top: 0px;
+}
+.part .well{
+    margin-top:50px;
+}
+textarea {
+    min-height:134px;
+}
+.select2-container > .selection > .select2-selection {
+    height:34px;
+    border-color:#ccc;
+    color:#666;
+    font-size:1.1em;
+}
+p.pregrey > span > span > span > span.select2-selection__rendered {
+    color: #999 !important;
+}
+.btn {
+    color:#333;
+}
+.btn-success {
+    color:#333;
+}
+.btn-info {
+    color:#333;
+}
+.btn-warning {
+    color:#333;
+}
+</style>
+
+<div id="logo">
+    <img src="/static/leaps_banner.png" alt="A group of students from the Lothians Equal Access Programme for Schools" title="A group of students from the Lothians Equal Access Programme for Schools" />
+</div>
+
+<form action="" id="survey" name="survey" method="post" data-validate="parsley">
+<fieldset>
+
+
+<!-- the intro part -->
+<div class="part intro">
+
+	<div class="row">
+	    <div class="col-sm-12">
+            <h1>Welcome to the LEAPS student survey</h1>
+	    </div>
+	</div>
+
+	<div class="row">
+	    <div class="col-sm-12">
+	        <p>You must complete all of the seven parts below. 
+	        It should take no more than 30 minutes to complete, if you prepare in advance.
+          Please have details of your qualifications, personal 
+	        interests, work experience, and possible University or College applications to hand before you start.
+	        You will also be asked about your eligibility - please view our 
+	        <a target="_blank" href="https://leapsonline.org/node/1602">What is LEAPS?</a> presentation to learn more.
+	        You can find out how we use and what we do with your personal data <a target="_blank" href="/policy">here</a>.</p>
+
+			<p><strong>Do not close your browser whilst completing the survey.</strong> It is recommended that 
+			you complete this survey on a PC as it is easier than using an ipad or tablet.</p>
+	        <p>Only the students of <a target="_blank" href="https://www.leapsonline.org/about/our-schools">participating schools</a> can complete the survey.</p>
+	        <p>Some fields will offer <strong>suggestions as you type</strong>. Choose a suitable suggestion if 
+	        one is presented, otherwise continue to type and your text will be accepted.</p>
+	        <p>If you need to <strong>insert extra rows</strong>, press <strong>add</strong> to get another row. 
+	        If you want to <strong>delete a row</strong>, press <strong>delete</strong> to remove the row.</p>
+	        <p><b>Required inputs have an asterisk.</b> Once entered they will become red if there is a problem. 
+	        You should check that all required inputs are green before proceeding. Inputs that are optional remain 
+	        white. You will only be able to submit the form once all required inputs have been answered.</p>
+        </div>
+	</div>
+
+</div>
+
+
+
+<!-- the student details page -->
+<div class="part student">
+
+	<div class="row">
+	    <div class="col-sm-12">
+	        <div class="well">
+	            <h2>1. Your details</h2>
+	        </div>
+	    </div>
+	</div>
+
+	<div class="row">
+	    <div class="col-sm-6">
+	        <div class="row">
+	            <div class="col-sm-3 hidden-xs">
+                    <p>First name *</p>
+	            </div>
+	            <div class="col-sm-7">
+            		<p><input class="form-control" type="text" name="first_name" data-required="true" data-trigger="focusout" placeholder="First name *"></p>
+	            </div>
+	        </div>
+        </div>
+	    <div class="col-sm-6">		
+	        <div class="row">
+	            <div class="col-sm-3 col-sm-offset-2 hidden-xs">
+                    <p>Last name *</p>
+	            </div>
+	            <div class="col-sm-7">
+            		<p><input class="form-control" type="text" name="last_name" data-required="true" data-trigger="focusout" placeholder="Last name *"></p>
+	            </div>
+	        </div>
+        </div>
+    </div>
+
+	<div class="row">
+	    <div class="col-sm-6">
+	        <div class="row">
+	            <div class="col-sm-3 hidden-xs">
+                    <p>Date of birth *</p>
+	            </div>
+	            <div class="col-sm-7">
+            		<p><input type="text" class="form-control dobdatepicker checkdob" id="date_of_birth" name="date_of_birth" data-required="true" data-trigger="change focusout" placeholder="Date of birth *"></p>
+            		<p class="dobwarning" style="color:red;font-size:0.8em;margin-bottom:10px;display:none;">format must be DD/MM/YYYY</p>
+	            </div>
+	        </div>
+        </div>
+	    <div class="col-sm-6">
+	        <div class="row">
+	            <div class="col-sm-3 col-sm-offset-2 hidden-xs">
+                    <p>Gender *</p>
+	            </div>
+	            <div class="col-sm-7">
+            		<p>
+            		    <select class="form-control" id="gender" name="gender" data-required="true" data-trigger="change focusout" style="color: #999;">
+            		    <option value="" disabled="disabled" selected="selected">select Gender *</option>
+            		    <option value="Male">Man / Male (including trans man)</option>
+            		    <option value="Female">Woman / Female (including trans woman)</option>
+            		    <option value="Other">In another way</option>
+            		    <option value="Do not wish to disclose">Prefer not to say</option>
+            		    </select>
+            		    <p id="show_gender_other" style="display:none">
+            		        If you want to tell us how you identify your gender, please enter it here, 
+            		        or leave blank and we will simply record it as "Other": <br>
+                		    <input type="text" class="form-control" id="gender_other" name="gender_other">
+                		</p>
+            		</p>
+	            </div>
+	        </div>
+        </div>
+    </div>
+
+    <br>
+    
+	<div class="row">
+	    <div class="col-sm-6">
+	        <div class="row">
+	            <div class="col-sm-3 hidden-xs">
+                    <p>Address *</p>
+	            </div>
+	            <div class="col-sm-7">
+            		<p><input class="form-control" type="text" name="address_line_1" data-required="true" data-trigger="focusout" placeholder="Address *"></p>
+	            </div>
+	        </div>
+        </div>
+	    <div class="col-sm-6">
+	        <div class="row">
+	            <div class="col-sm-3 col-sm-offset-2 hidden-xs">
+                    <p>Address line 2</p>
+	            </div>
+	            <div class="col-sm-7">
+            		<p><input class="form-control" type="text" name="address_line_2" placeholder="Address line 2"></p>
+	            </div>
+	        </div>
+        </div>
+    </div>
+
+	<div class="row">
+	    <div class="col-sm-6">
+	        <div class="row">
+	            <div class="col-sm-3 hidden-xs">
+                    <p>City *</p>
+	            </div>
+	            <div class="col-sm-7">
+            		<p><input class="form-control" type="text" name="city" data-required="true" data-trigger="focusout" placeholder="City *"></p>
+	            </div>
+	        </div>
+        </div>
+	    <div class="col-sm-6">
+	        <div class="row">
+	            <div class="col-sm-3 col-sm-offset-2 hidden-xs">
+                    <p>Region</p>
+	            </div>
+	            <div class="col-sm-7">
+            		<p><input class="form-control" type="text" name="region" placeholder="Region"></p>
+	            </div>
+	        </div>
+        </div>
+    </div>
+
+	<div class="row">
+	    <div class="col-sm-6">
+	        <div class="row">
+	            <div class="col-sm-3 hidden-xs">
+                    <p>Post code *</p>
+	            </div>
+	            <div class="col-sm-7">
+            		<p><input class="form-control checkpostcode" type="text" name="post_code" id="post_code" data-required="true" placeholder="Post code *"></p>
+            		<p class="postcodewarning" style="color:red;font-size:0.8em;margin-bottom:10px;display:none;">Please enter a valid UK post code</p>
+	            </div>
+	        </div>
+        </div>
+	    <div class="col-sm-6">
+	        <div class="row">
+	            <div class="col-sm-3 col-sm-offset-2 hidden-xs">
+                    <p>Email address *</p>
+	            </div>
+	            <div class="col-sm-7">
+            		<p><input class="form-control" type="text" name="email" data-type="email" data-required="true" data-trigger="keyup focusout" placeholder="Email address *"></p>
+	            </div>
+            </div>
+        </div>
+    </div>
+
+	<div class="row">
+	    <div class="col-sm-6">
+	        <div class="row">
+	            <div class="col-sm-3 hidden-xs">
+                    <p>Home phone</p>
+	            </div>
+	            <div class="col-sm-7">
+            		<p><input class="form-control" type="text" name="home_phone" placeholder="Home phone"></p>
+	            </div>
+	        </div>
+        </div>
+	    <div class="col-sm-6">
+	        <div class="row">
+	            <div class="col-sm-3 col-sm-offset-2 hidden-xs">
+                    <p>Mobile phone</p>
+	            </div>
+	            <div class="col-sm-7">
+            		<p><input class="form-control checkmobile" type="text" name="mobile_phone" id="mobile_phone" placeholder="Mobile phone"></p>
+            		<p class="mobilewarning" style="color:red;font-size:0.8em;margin-bottom:10px;display:none;">For UK mobile numbers please enter in format starting 07, no +44, no spaces, 11 digits. Thank you.</p>
+	            </div>
+	        </div>
+        </div>
+    </div>
+                    
+    <br>
+    
+	<div class="row">
+	    <div class="col-sm-6">
+	        <div class="row">
+	            <div class="col-sm-3 hidden-xs">
+                    <p>School *</p>
+	            </div>
+	            <div class="col-sm-7">
+            		<p class="pregrey"><select class="form-control checkschool" id="school" name="school" data-required="true" data-trigger="change focusout" style="color: #999;">
+            		    <option value="" disabled="disabled" selected="selected">select School *</option>
+            		    {% for opt in selections.schools %}
+            		        <option>{{ opt }}</option>
+            		    {% endfor %}
+            		</select></p>
+	            </div>
+	        </div>
+        </div>
+	    <div class="col-sm-6">
+	        <div class="row">
+	            <div class="col-sm-3 col-sm-offset-2 hidden-xs">
+                    <p>Year group *</p>
+	            </div>
+	            <div class="col-sm-7">
+            		<p><select class="form-control" name="year" data-required="true" data-trigger="change focusout" style="color: #999;">
+            		    <option value="" disabled="disabled" selected="selected">select Year group *</option>
+            		    <option>Third year</option>
+            		    <option>Fourth year</option>
+            		    <option>Fifth year</option>
+            		    <option>Sixth year</option>
+            		    <option>Other</option>
+            		</select></p>
+	            </div>
+	        </div>
+        </div>
+    </div>
+                    
+	<div class="row">
+	    <div class="col-sm-6">
+	        <div class="row">
+	            <div class="col-sm-3 hidden-xs">
+                    <p>School house</p>
+	            </div>
+	            <div class="col-sm-7">
+            		<p><input class="form-control" type="text" name="school_house" placeholder="School house"></p>
+	            </div>
+	        </div>
+        </div>
+	    <div class="col-sm-6">
+	        <div class="row">
+	            <div class="col-sm-5 hidden-xs">
+                    <p>Scottish Candidate Number (SCN)</p>
+	            </div>
+	            <div class="col-sm-7">
+            		<p><input class="form-control" type="text" name="scn_number" placeholder="Scottish Candidate Number (SCN)"></p>
+	            </div>
+	        </div>
+        </div>
+    </div>
+
+</div>
+
+
+
+<!-- the qualifications page -->
+<div class="part qualifications">
+
+	<div class="row">
+	    <div class="col-sm-12">
+	        <div class="well">
+	            <h2>2. Qualifications and currently sitting</h2>
+	            <p>Please input details of all qualifications 
+	            you have (or are studying for current year) for each year of school. 
+	            Please include any qualifications you sat but did not pass. If you do not yet know your grade, 
+	            select Unknown in the Grade field. If you have any qualifications that do not meet the criteria 
+	            below, you will have the option to describe them later.</p>
+	        </div>
+	    </div>
+	</div>
+	
+    <div> <!-- need divs round each year quals set for row add/remove to work well-->
+
+    	<div class="row multi manyrows forquals">
+    	    <div class="col-sm-2">
+                <p class="hidden-xs">School year</p>
+        		<p class="pregrey"><select name="qualification_year" class="form-control qualificationselector" style="color: #999;">
+        		    <option value="" disabled="disabled" selected="selected">select School year</option>
+        		    <option>Third year</option>
+        		    <option>Fourth year</option>
+        		    <option>Fifth year</option>
+        		    <option>Sixth year</option>
+        		</select></p>
+        	</div>
+    	    <div class="col-sm-3">
+                <p class="hidden-xs">Subject</p>
+        		<p class="pregrey"><select name="qualification_subject" class="form-control select2this" style="color: #999;">
+        		    <option value="" disabled="disabled" selected="selected">select Subject</option>
+        		    {% for opt in selections.subjects %}
+        		        <option>{{ opt }}</option>
+        		    {% endfor %}
+        		</select></p>
+        	</div>
+    	    <div class="col-sm-3">
+                <p class="hidden-xs">Level of qualification</p>
+        		<p class="pregrey"><select name="qualification_level" class="form-control qualificationlevels" style="color: #999;">
+        		    <option value="" disabled="disabled" selected="selected">select Level of qualification</option>
+        		    {% for opt in selections.levels %}
+        		        <option>{{ opt }}</option>
+        		    {% endfor %}
+        		</select></p>
+        	</div>
+    	    <div class="col-sm-2">
+                <p class="hidden-xs">Grade</p>
+        		<p class="pregrey"><select name="qualification_grade" class="form-control qualificationgrades" style="color: #999;">
+        		    <option value="" disabled="disabled" selected="selected">select Grade</option>
+        		    {% for opt in selections.grades %}
+        		        <option>{{ opt }}</option>
+        		    {% endfor %}
+        		</select></p>
+        	</div>
+    	    <div class="col-sm-2">
+            </div>
+    	</div>
+	</div>
+
+</div>
+
+
+
+        
+
+
+
+<!-- the applications page -->
+<div class="part applications">
+
+	<div class="row">
+	    <div class="col-sm-12">
+	        <div class="well">
+	            <h2>3. Potential Applications</h2>
+	            <p>Please list any applications for further or higher education that you are 
+	            thinking of making. Use one row per application, up to the maximum of 6. If you have not made any decisions yet, 
+	            please feel free to leave this section blank. The more information you add to this section, the more detailed 
+	            your interview will be. Even if you have lots of different ideas, putting examples of some of them in this 
+	            section will help us to advise you better.</p>
+	        </div>
+	    </div>
+	</div>
+
+	<div class="row multi">
+	    <div class="col-sm-4">
+            <p class="hidden-xs">College / University</p>
+    		<p class="pregrey"><select class="form-control institutionselector select2this" name="application_institution" style="color: #999;">
+    		    <option value="" disabled="disabled" selected="selected">select College / University</option>
+    		    {% for opt in selections.institutions %}
+    		        <option>{{ opt }}</option>
+    		    {% endfor %}
+    		</select></p>
+    	</div>
+	    <div class="col-sm-4">
+            <p class="hidden-xs">Subject</p>
+    		<p class="pregrey"><select class="form-control subjectselector select2this" name="application_subject" style="color: #999;">
+    		    <option value="" disabled="disabled" selected="selected">select Subject</option>
+    		    {% for opt in selections.advancedsubjects %}
+    		        <option>{{ opt }}</option>
+    		    {% endfor %}
+    		</select></p>
+    	</div>
+	    <div class="col-sm-2">
+            <p class="hidden-xs">Level of study</p>
+    		<p class="pregrey"><select class="form-control levelselector select2this" name="application_level" style="color: #999;">
+    		    <option value="" disabled="disabled" selected="selected">select Level of study</option>
+    		    {% for opt in selections.advancedlevels %}
+    		        <option>{{ opt }}</option>
+    		    {% endfor %}
+    		</select></p>
+    	</div>
+	    <div class="col-sm-2">
+	    </div>
+	</div>
+</div>
+
+
+
+
+
+
+        
+
+<!-- the interests page -->
+<div class="part interests">
+
+	<div class="row">
+	    <div class="col-sm-12">
+	        <div class="well">
+	            <h2>4. Interests and achievements</h2>
+	            <p>Please give short details of your extra-curricular interests and achievements e.g. 
+				sport, music, drama, Duke of Edinburgh, prefect etc and they will be discussed in more detail at your interview. 
+				It is recommended that you write your own copy of interests, achievements and work experience in a document elsewhere, 
+				then insert them into this form. You will find the document useful for your personal statement in your UCAS application. 
+				Remember - you won't be able to return to this form! 
+				Use one box per interest, up to the maximum of 6.</p>
+	        </div>
+	    </div>
+	</div>
+
+	<div class="row multi">
+	    <!--<div class="col-sm-4">
+            <p>Title</p>
+    		<p><input class="form-control" type="text" name="interest_title"></p>
+    	</div>-->
+	    <div class="col-sm-9">
+		    <!-- add data-required="true" to the following textarea to actually make the maxwords take effect -->
+    		<p><textarea class="form-control" name="interest_brief_description" data-maxwords="200" data-trigger="keyup focusout change"></textarea></p>
+    	</div>
+	    <div class="col-sm-3">
+            <p class="hidden-xs">Interest title</p>
+    		<p><input type="text" class="form-control" name="interest_title" placeholder="Interest title"></p>
+	    </div>
+	</div>
+
+</div>
+
+
+
+
+
+
+        
+
+
+<!-- the experience page -->
+<div class="part experience">
+
+	<div class="row">
+	    <div class="col-sm-12">
+	        <div class="well">
+	            <h2>5. Work and other experience</h2>
+	            <p>Please give short details of any work or voluntary experience you have had e.g. 
+				paid employment, school committees, Access to the Professions events etc and they can be discussed further at 
+				your interview. It is recommended that you write your own copy of interests, achievements and work experience 
+				in a document elsewhere, then insert them into this form. You will find the document useful for your personal 
+				statement in your UCAS application. Remember - you won't be able to return to this form! 
+				Use one row per experience, up to the maximum of 6.</p>
+			</div>
+	    </div>
+	</div>
+
+	<div class="row multi">
+	    <div class="col-sm-6">
+		    <!-- add data-required="true" to the following textarea to actually make the maxwords take effect -->
+    		<p><textarea class="form-control" name="experience_brief_description" data-maxwords="200" data-trigger="keyup focusout change"></textarea></p>
+    	</div>
+	    <div class="col-sm-3">
+            <p class="hidden-xs">Date from</p>
+    		<p><input type="text" class="form-control datepicker" name="experience_date_from" placeholder="Date from"></p>
+            <p class="hidden-xs">Date to</p>
+    		<p><input type="text" class="form-control datepicker" name="experience_date_to" placeholder="Date to (unless ongoing)"></p>
+    	</div>
+	    <div class="col-sm-3">
+            <p class="hidden-xs">Job title</p>
+    		<p><input type="text" class="form-control" name="experience_title" placeholder="Job title"></p>
+    	</div>
+	</div>
+
+</div>
+
+
+
+
+
+
+
+<!-- the extra page -->
+<div class="part extra">
+
+	<div class="row">
+	    <div class="col-sm-12">
+	        <div class="well">
+	            <h2>6. Additional academic and career information</h2>
+	        </div>
+	    </div>
+	</div>
+
+	<div class="row">
+	    <div class="col-sm-4">
+            <p>Please describe any career or post school plans that you may have</p>
+	    </div>
+	    <div class="col-sm-8">
+            <p><textarea class="form-control" name="career_plans"></textarea></p>
+	    </div>
+	</div>
+
+	<div class="row">
+	    <div class="col-sm-4">
+            <p>List any additional qualifications not already mentioned (e.g. Sports Leadership etc)</p>
+	    </div>
+	    <div class="col-sm-8">
+            <p><textarea class="form-control" name="additional_qualifications"></textarea></p>
+	    </div>
+	</div>
+
+	<div class="row">
+	    <div class="col-sm-4">
+            <p>If you feel your academic performance has been affected at any time in school, 
+			please tell us about it here e.g. a period of absence from school, time spent in care, estrangement, 
+			health issues, caring responsibilities, bereavement. (At your 
+			LEAPS interview, we may discuss if this would be relevant to share with university admissions tutors.)</p>
+	    </div>
+	    <div class="col-sm-8">
+            <p><textarea class="form-control" name="issues_affecting_performance"></textarea></p>
+	    </div>
+	</div>
+
+	<div class="row">
+	    <div class="col-sm-4">
+            <p>Do you have any particular queries or concerns that you would like covered at your LEAPS Interview?</p>
+	    </div>
+	    <div class="col-sm-8">
+            <p><textarea class="form-control" name="particular_queries"></textarea></p>
+	    </div>
+	</div>
+
+</div>
+
+
+
+<!-- the student details page -->
+<div class="part criteria">
+
+	<div class="row">
+	    <div class="col-sm-12">
+	        <div class="well">
+	            <h2>7. Relevant criteria</h2>
+	            <p>Please indicate which of these criteria you think applies to make you LEAPS eligible. 
+					These will be discussed and confirmed at your interview.</p>
+	        </div>
+	    </div>
+	</div>
+
+	<div class="row">
+	    <div class="col-sm-6">
+
+			<input type="checkbox" id="claimed_simd20" name="claimed_simd20" style="margin-top:-3px;">
+			SIMD 20 (this is based on your post code and would be automatically checked if appropriate)
+			<span id="can_claim_simd" style="display: none;"><br>(Your SIMD eligibility has already been set for you, based on the post code you provided above.)</span>
+	
+				<br><br>
+			<input type="checkbox" id="claimed_group_school" name="claimed_group_school" style="margin-top:-3px;">
+			Attend a Group 1 or Group 1+ school (Alloa, Bannockburn, Castlebrae, Craigroyston,
+			Drummond, Eyemouth, Forrester, Gracemount, Hawick, Liberton, Lornshill, Newbattle, Preston Lodge, Ross, 
+			Tynecastle, Wester Hailes)
+			<span id="can_claim_school" style="display: none;"><br>(Your school group has already been set for you, based on the school you provided above.)</span>
+	
+				<br><br>
+				<input type="checkbox" name="claimed_first_attending_university" style="margin-top:-3px;">
+				Student who is first generation in family to apply to higher education (this includes students
+			whose parents do not already have a degree and students whose parents may have briefly
+			participated in higher education but did not achieve a degree.)
+			<br><br>
+	
+				<input type="checkbox" name="claimed_low_income_family" style="margin-top:-3px;">
+			Student from a low income background (for instance where a student is entitled to EMA, free meals
+			in school, or where the family is entitled to a benefit such as Universal Credit)
+				<br><br>
+
+        </div>
+	    <div class="col-sm-6">		
+
+			<input type="checkbox" name="claimed_young_carer" style="margin-top:-3px;">
+			Young carer (Anyone who provides unpaid care, for a friend, partner or family member, who due to
+			illness, frailty, disability, a mental health problem or an addiction cannot cope without their
+			support.)
+				<br><br>
+	
+				<input type="checkbox" name="claimed_looked_after_child" style="margin-top:-3px;">
+			Care experienced (any student who has been, or is currently, in care.)
+				<br><br>
+	
+			<input type="checkbox" id="claimed_estranged" name="claimed_estranged" style="margin-top:-3px;">
+			Are you estranged from both your parents? (a young person who currently has little or no contact with either of their parents and/or
+			their legal guardian) If you are unsure what this means then please head to the What is LEAPS presentation / LEAPS Online video for 
+			more information.
+	
+			<div id="more_estranged" style="display:none;">
+				How old were you when you became estranged? <select id="claimed_estranged_age" name="claimed_estranged_age" style="width:100px">
+				<option></option>
+				<option>Under 16</option>
+				<option>16</option>
+				<option>17</option>
+				<option>18</option>
+			</select>
+			<br>
+	
+			Have you ever been cared for by another member of your family, friends, or local authorities?
+			<select id="claimed_estranged_cared_for" name="claimed_estranged_cared_for" style="width:100px">
+				<option></option>
+				<option>Yes</option>
+				<option>No</option>
+			</select>
+			</div>
+
+			<br><br>
+
+			<input type="checkbox" name="claimed_asylum_refugee" style="margin-top:-3px;">
+			Are you an asylum seeker or a refugee?
+
+			<br><br>
+
+			<span id="can_claim_interviewed" style="display: none;">
+				<input type="checkbox" name="claimed_s5_interviewed" style="margin-top:-3px;">
+				Have you had an S5 interview?
+			</span>
+        </div>
+    </div>
+
+</div>
+
+
+
+<!-- the form submission button -->
+<div class="part submit">
+
+	<div class="row" style="margin-top:30px;">
+	    <div class="col-sm-12">
+        	<p><input id="triggersave" class="btn btn-success btn-block" type="submit" name="submit" value="Submit your survey" /></p>
+        	<p>Please wait for the confirmation page to load after you hit the Submit Your Survey button. It may take a few moments. Thanks!</p>
+	    </div>
+	</div>
+
+</div>
+
+
+
+
+</fieldset>
+</form>
+
+{% endblock %}
+
+
+    
+

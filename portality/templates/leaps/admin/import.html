@@ -1,0 +1,64 @@
+{% extends "leaps/admin/admin-base.html" %}
+
+{% block content %}
+
+<script>
+jQuery(document).ready(function() {
+    if (window.location.href.indexOf("institution=") > -1) {
+        //$('#institution').val(decodeURIComponent(window.location.href.split("institution=")[1]));
+        $('#institution option[value="' + decodeURIComponent(window.location.href.split("institution=")[1]) + '"]').attr('selected','selected'); //.change();
+    }
+});
+</script>
+
+<div class="row-fluid" style="margin-bottom:10px;">
+    <div class="span12">
+        <h1>Import supporting data records</h1>
+    </div>
+</div>
+
+<div class="row-fluid">
+    <div class="span12">
+
+        {% if not model %}
+        <p>Which type of data do you want to import?</p>
+        <ul>
+        <li><a href="grade">grades</a></li>
+        <li><a href="institution">institutes</a></li>
+        <li><a href="school">schools</a></li>
+        <li><a href="level">school study levels</a></li>
+        <li><a href="advancedlevel">advanced study levels</a></li>
+        <li><a href="year">year groups</a></li>
+        </ul>
+        
+        {% else %}
+
+        <p>You have chosen to upload some records into the {{ model }} dataset.</p>
+        <p>Your upload file must be a comma separated value list (.csv) &mdash; software such as MS Excel can save spreadsheets as this type &mdash; or a JSON file.</p>
+
+        <form action="" method="POST" enctype="multipart/form-data">
+        {% if subjects %}
+        <p><select name="institution" id="institution">
+            <option></option>
+            {% for subject in subjects %}
+            <option value="{{subject}}">{{subject}}</option>
+            {% endfor %}
+        </select> Choose the institution to upload these subjects to (deletes any other subjects for that institution).</p>
+        <p>CSV files can be saved from Microsoft Excel, for example. The name of the file you upload must end with the .csv extension - not .xls or anything else. 
+            <br>NOTE that such files must be correctly formatted - 
+            the first line of your file must contain the following column headers in correct order - "level", "name", "coursecode".
+            <br>Subject names are mandatory but levels (e.g. MA, BA, BSc) and course codes are optional - 
+            you could leave those cells blank in your spreadsheet, but you should still keep the columns present even if they are empty. </p>
+        {% else %}
+        <p><input type="checkbox" name="deleteall"> Check this box if you wish to remove all current data before importing the new data.</p>
+        {% endif %}
+        <p><input type="file" name="upfile"></p>
+        <p><input class="btn" type="submit" name="submit" value="Import" /></p>
+        </form>
+        {% endif %}
+
+
+    </div>
+  </div>
+
+{% endblock %}

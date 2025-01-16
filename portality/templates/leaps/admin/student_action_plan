@@ -1,0 +1,299 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+    <head>
+        <style type="text/css">
+            @page {
+                size: A4;
+                margin: 1cm;
+            }
+            body{
+                font-size:0.9em;
+            }
+            div{
+                padding:0;
+                margin:0;
+            }
+            h2{
+                padding:2px;
+                margin:10px 0 0 0;
+                background-color:#ccc;
+            }
+            h3{
+                padding:2px;
+                margin:10px 0 0 0;
+                background-color:#ccc;
+            }
+            table{
+                margin:0 0 10px 0;
+                width:100%;
+                border-collapse:collapse;
+                page-break-inside:auto;
+            }
+            th{
+                padding:2px;
+                border:1px solid #ccc;
+            }
+            td{
+                border:1px solid #ccc;
+            }
+            tr{
+                page-break-inside:avoid;
+                page-break-after:auto;
+            }
+        </style>
+    </head>
+    <body>
+
+        <h3>Lothians Equal Access Programme for Schools</h3>
+        <h2 style="margin-top:0px;">Pre-UCAS Interview Student Action Plan</h2>
+
+        <table>
+            <tr>
+                <td class="title">Date of interview</td> <td>{{ '/'.join(record.interview.form_date.split(' ')[0].split('-')[::-1]) }}</td>
+                <td class="title">Name of interviewer</td> <td>{{ record.interviewer }}</td>
+            </tr>
+            <tr>
+                <td class="title">Student first name</td> <td>{{ record.first_name }}</td>
+                <td class="title">Student last name</td> <td>{{ record.last_name }}</td>
+            </tr>
+            <tr>
+                <td class="title">Date of birth</td> <td>{{ record.date_of_birth }}</td>
+                <td class="title">School</td> <td>{{ record.school }}</td>
+            </tr>
+        </table>
+        
+        <h3>Summary of discussion / key action points</h3>
+        <div style="border: 1px solid #ccc; padding-bottom: 30px;">
+            {{ record.interview.action_points.replace('\r\n', '<br>') }}
+        </div>
+
+        <h3>Courses discussed</h3>
+        <table>
+            <tr>
+                <td><p>{{ record.interview.courses_discussed.replace('\r\n', '<br>') }}</p></td>
+            </tr>
+        </table>
+
+        <h3>Specific subjects required</h3>
+        <table>
+            <tr>
+                <td><p>{{ record.interview.specific_subjects_required.replace('\r\n', '<br>') }}</p></td>
+            </tr>
+        </table>
+        
+        <h3>HNC / HND courses / articulation routes discussed, to research</h3>
+        <table>
+            <tr>
+                <td><p>{{ record.interview.hn_courses_discussed.replace('\r\n', '<br>') }}</p></td>
+            </tr>
+        </table>
+
+        <h3>Pre-application enquiries</h3>
+        <table>
+            <tr>
+                <td>
+                    <p>You will hear directly from the university if you would be made an offer based on your exam results. 
+                        This is not an offer but an indication from the university, if you were to apply via UCAS</p>
+                    <p>Pre-application enquires will be raised on your behalf, for the following 
+                    courses, if any:</p>
+                    
+                    {% if record.interview.applications %}
+                    {% for app in record.interview.applications %}
+                    {{ app.level }} {{ app.subject }} at {{ app.institution }}<br><br>
+                    {% endfor %}
+                    {% endif %}
+                    
+                    <br>
+            </tr>
+            <tr>
+                <td>
+                    <p>Find out more about pre-application enquiries in our pre-application enquiries blog post at 
+                    <a href="https://leapsonline.org/schoolstudents/s6-blog/what-pre-application-enquiry">https://leapsonline.org/schoolstudents/s6-blog/what-pre-application-enquiry</a></p>
+                </td>
+            </tr>
+        </table>
+        
+        {% if record.interview.care_experienced %}
+        <h3>Care Experienced</h3>
+        <table>
+            <tr>
+                <td>
+                    <p>LEAPS will be in touch with you with more information relating to support for students who have experienced care.</p>
+                    <p>Please tick the 'Have you been in care?' box on the UCAS form when you apply. Find out more about this UCAS tick 
+                    box at <a href="https://www.ucas.com/file/37276/download?token=-o8W4U-c">https://www.ucas.com/file/37276/download?token=-o8W4U-c</a>.</p>
+                    <p>More information available at: <a href="https://leapsonline.org/schoolstudents/care-experienced-students">https://leapsonline.org/schoolstudents/care-experienced-students</a></p>
+                </td>
+            </tr>
+        </table>
+        {% endif %}
+
+        {% if record.interview.young_carer %}
+        <h3>Young carer</h3>
+        <table>
+            <tr>
+                <td>
+                    <p>LEAPS will be in touch with you with more information relating to support for students who are young carers.</p>
+                    <p>Please note, LEAPS does not require you be registered as a young carer in order for you to be eligible for LEAPS support.</p>
+                    <p>Please tick the 'Do you have any caring responsibilities?' box in the 'Background information' section of the UCAS form when you apply. 
+                    Find out more about this UCAS tick box at <a href="https://leapsonline.org/schoolstudents/blogs/support-young-carers">https://leapsonline.org/schoolstudents/blogs/support-young-carers</a>.</p>
+                    <p>More information available at: <a href="https://leapsonline.org/schoolstudents/young-and-student-carers">https://leapsonline.org/schoolstudents/young-and-student-carers</a></p>
+                </td>
+            </tr>
+        </table>
+        {% endif %}
+
+        {% if record.interview.estranged %}
+        <h3>Estranged</h3>
+        <table>
+            <tr>
+                <td>
+                    <p>LEAPS will be in touch with you with more information relating to support for students who are estranged.</p>
+                    <p>Please tick the 'Would you consider yourself estranged from your parents (i.e. you are not in contact
+                    with and supported by your parents)?' box in the 'Background information' section of the UCAS form when you apply. 
+                    Find out more about this UCAS tick box at <a href="https://leapsonline.org/schoolstudents/blogs/support-estranged-students">https://leapsonline.org/schoolstudents/blogs/support-estranged-students</a>.</p>
+                    <p>More information available at: <a href="https://leapsonline.org/schoolstudents/estranged-students">https://leapsonline.org/schoolstudents/estranged-students</a></p>
+                </td>
+            </tr>
+        </table>
+        {% endif %}
+            
+        <h3>Further options</h3>
+        <table>
+            <tr>
+                <td>
+                    <p>To help you explore your higher education study options further, we'd suggest you look at:</p>
+
+                    <h4>UCAS Website</h4>
+                    <p>For general guidance on applying to higher education visit <a href="https://ucas.com">https://ucas.com</a> and use the UCAS
+                    Search tool at <a href="https://digital.ucas.com/search">https://digital.ucas.com/search</a> to research courses.</p>
+
+                    <h4>University and College Prospectuses/Websites</h4>
+                    <p>Look at university/college websites/prospectuses to research courses and institutions.</p>
+                </td>
+            </tr>
+            
+            <tr>
+                <td>
+                    <h4>Open Days</h4>
+                    <p>You might not be able to attend college/university open days in person just now, but keep an
+                    eye out for updates as some might be available as online/virtual events and some might take
+                    place on campuses later in the year if they are able to go ahead.</p>
+                    <p>UCAS Open Days information:<br><a href="https://www.ucas.com/undergraduate/what-and-where-study/open-days-and-events/open-days-tips">https://www.ucas.com/undergraduate/what-and-where-study/open-days-and-events/open-days-tips</a></p>
+
+                    <p>LEAPS Open Days blog post:<br><a href="https://leapsonline.org/schoolstudents/s5hub/open-days">https://leapsonline.org/schoolstudents/s5hub/open-days</a></p>
+                </td>
+            </tr>
+            
+            <tr>
+                <td>
+                    <h4>Personal Statement Guidance</h4>
+                    <p>If you need some help getting started with and/or editing your personal statement, have a look at the following: 
+                    <a href="https://www.leapsonline.org/about/leaps-news/writing-your-ucas-personal-statement">www.leapsonline.org/writingpersonalstatement</a>.</p>
+
+                    {% if record.interview.taking_leaps_transition_course %}
+                    <h4>LEAPS Transitions Course</h4>
+
+                    <p>If you are taking the LEAPS Transitions Course, you should add this as one of your qualifications as you would any 
+                        other subject you are taking in school. Here's how to add this to your UCAS qualifications:</p>
+
+                    <ul>
+                        <li>In the Education section, click 'Add qualification' under your school.</li>
+                        <li>Scroll down and in the Search by name box, type in 'LEAPS', and select the LEAPS Transition Course.</li>
+                        <li>Under Title, type in 'LEAPS Transitions Course: 20 credits, SCQF Level 7'.</li>
+                        <li>The qualification date is '06/2025'.</li>
+                        <li>The awarding organisation is 'LEAPS'.</li>
+                        <li>Leave the grade, and module/unit boxes blank.</li>
+                        <li>Scroll down and click Save qualifications.</li>
+                    </ul>
+
+                    <p>For more information, follow our guide which shows you how to identify yourself as a LEAPS Transitions 
+                        Course student on your UCAS application at www.leapsonline.org/leaps-ucas</p>
+                    {% endif %}
+                </td>
+            </tr>
+            
+            <tr>
+                <td>
+                    <h4>How to identify yourself as a LEAPS student on the UCAS form</h4>
+
+                    <p>On your UCAS form, in the Extra Activities section, you will see a question: Have you attended an
+                    activity to prepare you for higher education? Here's how to fill this in as a LEAPS student:</p>
+                    <ul>
+                    <li>Type of activity?<br>
+                    Choose: "Information, advice and guidance" from the drop down menu.</li>
+                    <li>Activity provider?<br>
+                    Choose: "LEAPS" from the drop down menu.</li>
+                    <li>Name of activity/programme?<br>
+                    Type: "LEAPS: I am a LEAPS-eligible student.
+                    Please see www.leapsonline.org for more information."</li>
+                    <li>Start date:<br>
+                    Select 16/08/2023 (this is to demonstrate the start of your S5)</li>
+                    <li>End date:<br>
+                    Select 26/06/2025 (this is to demonstrate the end of your S6)</li>
+                    </ul>
+                    <p>For more information, follow our guide which shows you how to identify yourself as a LEAPS student
+                    on your UCAS application at <a href="https://www.leapsonline.org/leaps-ucas-application">www.leapsonline.org/leaps-ucas-application</a>.</p>
+
+                    {% if record.transition_course_taking %}
+                    <p>If you are on the LEAPS Transitions Course, you have an additional activity to add:
+                    On your UCAS form, in the Extra Activities section, you will see a question: Have you attended an
+                    activity to prepare you for higher education? Here's how to fill this in as a Transitions Course
+                    student:</p>
+                    <ul>
+                    <li>Type of activity?<br>
+                    Choose: "Skills and attainment raising activity" from the drop down menu.</li>
+                    <li>Activity provider?<br>
+                    Choose: "LEAPS Transitions Course" from the drop down menu.</li>
+                    <li>Name of activity/programme?<br>
+                    Type: "LEAPS Transitions Course 20 credits (SCQF Level 7) <a href="https://www.leapsonline.org/transitions-admissions">www.leapsonline.org/transitions-admissions</a>"</li>
+                    <li>Start date:<br>
+                    Select 29/08/2023 (this is to demonstrate the start of the course)</li>
+                    <li>End date:<br>
+                    Select 26/06/2025 (this is to demonstrate the end of the course)</li>
+                    </ul>
+                    <p>For more information, follow our guide which shows you how to identify yourself as a LEAPS
+                    Transitions Course student on your UCAS application at 
+                    <a href="https://www.leapsonline.org/leaps-ucas-application">www.leapsonline.org/leaps-ucas-application</a>.</p>
+                    {% endif %}
+                </td>
+            </tr>
+
+            <tr>
+                <td>
+
+                    <h4>LEAPS S6 Blog</h4>
+                    <p>Visit our LEAPS S6 Blog at <a href="https://leapsonline.org/schoolstudents/s6-blog">https://leapsonline.org/schoolstudents/s6-blog</a> 
+                    for tips and advice on higher education - you might like our recent blog
+                    post about career and course exploration during COVID-19:<br>
+                    <a href="https://leapsonline.org/schoolstudents/s6-blog/career-and-course-exploration-during-covid-19">https://leapsonline.org/schoolstudents/s6-blog/career-and-course-exploration-during-covid-19</a></p>
+                </td>
+            </tr>
+            
+            {% if not record.interview.estranged %}
+            <tr>
+                <td>
+                    <h4>LEAPS Parents' & Carers' Resources</h4>
+                    <p>Tell your parents and carers about our LEAPS Parents' & Carers' resources at 
+                    <a href="https://leapsonline.org/parents">https://leapsonline.org/parents</a>. 
+                    We know they'll have questions too, and we can help answer them.</p>
+                </td>
+            </tr>
+            {% endif %}
+
+            <tr>
+                <td>
+                    <h4>Find LEAPS on Twitter and Instagram @leaps1996</h4>
+                    
+                    <p>Follow us for updates throughout the year as we support you to explore higher education at college and
+                    university by providing impartial information, advice, and guidance.</p>
+                    
+                    <p>Read our Privacy Policy at <a href="https://leapssurvey.org/policy">https://leapssurvey.org/policy</a> to find out how and why we use the information you provide.</p>
+                </td>
+            </tr>
+        </table>
+        
+        <h4><a href="https://www.leapsonline.org">www.leapsonline.org</a> | <a href="mailto:leaps@ed.ac.uk">leaps@ed.ac.uk</a></h4>
+
+    </body>
+</html>
+

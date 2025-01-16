@@ -1,0 +1,36 @@
+{% extends "leaps/admin/admin-base.html" %}
+
+{% block options %}
+<a class="btn" href="/account/register">create new user</a>
+{% endblock %}
+
+{% block content %}
+
+    {% if userstats %}
+        <p>
+          There are <a href="?users=super">{{ userstats.super_user }}</a> super users, 
+          <a href="?users=do_admin">{{ userstats.do_admin }}</a> with access to admin, 
+          <a href="?users=edit_students">{{ userstats.edit_students }}</a> users who can edit students in admin, 
+          <a href="?users=view_admin">{{ userstats.view_admin }}</a> users who can only view admin, 
+          <a href="?users=school">{{ userstats.school_users }}</a> school accounts, 
+          <a href="?users=institution">{{ userstats.institution_users }}</a> institution accounts,
+          <a href="?users=perform_interviews">{{ userstats.perform_interviews }}</a> interviewer accounts,</p>
+          and <a href="?users=perform_and_manage_interviewers">{{ userstats.perform_and_manage_interviewers }}</a> interviewer manager accounts.</p>
+    {% endif %}
+    {% if showing %}
+    <p>Showing {{ showing }} users.</p>
+    {% endif %}
+
+    <hr></hr>
+    
+    {% for user in users %}
+        <p>
+            <a style="font-size:24px;" href="/account/{{ user.id }}">{{ user.id }}</a>
+            created : {{ user.created_date }}
+        </p>
+    {% endfor %}
+
+    <div class="clearfix"></div>
+
+{% endblock %}
+

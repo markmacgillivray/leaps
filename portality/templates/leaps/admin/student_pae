@@ -1,0 +1,170 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+    <head>
+        <style type="text/css">
+            @page {
+                size: A4;
+                margin: 1cm;
+            }
+            body{
+                font-size:0.9em;
+            }
+            div{
+                padding:0;
+                margin:0;
+            }
+            h3{
+                padding:2px;
+                margin:10px 0 0 0;
+                background-color:#ccc;
+            }
+            table{
+                margin:0 0 30px 0;
+                width:100%;
+            }
+            td{
+            }
+            td.title{
+                font-weight:bold;
+            }
+            th{
+                padding:2px;
+            }
+        </style>
+    </head>
+    <body>
+
+        <h3>Lothians Equal Access Programme for Schools<br />
+        Pre UCAS Application enquiry form to {{ application.institution }}</h3>
+
+        <table>
+            <tr>
+                <td class="title">First name</td> <td>{{ record.first_name }}</td>
+                <td class="title">Last name</td> <td>{{ record.last_name }}</td>
+                <td class="title">Date of birth</td> <td>{{ record.date_of_birth }}</td>
+            </tr>
+            <tr>
+                <td class="title">Post code</td> <td>{{ record.post_code }}</td>
+                <td class="title">School</td> <td>{{ record.school }}</td>
+                <td class="title">SCN number</td> <td>{{ record.scn_number }}</td>
+            </tr>
+            <tr>
+                <td class="title">SIMD %</td> <td>{{ record.simd_pc }}</td>
+                <td class="title">LEAPS school category</td> <td>{{ record.leaps_category }}</td>
+                <td class="title">SHEP school</td> <td>{% if record.shep_school == true %}Yes{% else %}No{% endif %}</td>
+            </tr>
+        </table>
+
+        <h3>Qualifications</h3>
+        <table>
+            <tr>
+                <th>Year</th>
+                <th>Level</th>
+                <th>Subject</th>
+                <th>Grade</th>
+            </tr>
+            {% for object in record.qualifications %}
+                {% if object.year|lower == "third year" %}
+                    <tr><td>{{ object.year }}</td><td>{{ object.level }}</td><td>{{ object.subject }}</td><td>{{ object.grade }}</td></tr>
+                {% endif %}
+            {% endfor %}
+            {% for object in record.qualifications %}
+                {% if object.year|lower == "fourth year" %}
+                    <tr><td>{{ object.year }}</td><td>{{ object.level }}</td><td>{{ object.subject }}</td><td>{{ object.grade }}</td></tr>
+                {% endif %}
+            {% endfor %}
+            {% for object in record.qualifications %}
+                {% if object.year|lower == "fifth year" %}
+                    <tr><td>{{ object.year }}</td><td>{{ object.level }}</td><td>{{ object.subject }}</td><td>{{ object.grade }}</td></tr>
+                {% endif %}
+            {% endfor %}
+            {% for object in record.qualifications %}
+                {% if object.year|lower == "sixth year" %}
+                    <tr><td>{{ object.year }}</td><td>{{ object.level }}</td><td>{{ object.subject }}</td><td>{{ object.grade }}</td></tr>
+                {% endif %}
+            {% endfor %}
+            {% for object in record.qualifications %}
+                {% if object.year|lower != "third year" and object.year|lower != "fourth year" and object.year|lower != "fifth year" and object.year|lower != "sixth year" %}
+                    <tr><td>{{ object.year }}</td><td>{{ object.level }}</td><td>{{ object.subject }}</td><td>{{ object.grade }}</td></tr>
+                {% endif %}
+            {% endfor %}
+        </table> 
+
+        <h3>Further information</h3>
+        <p>
+            {% if record.simd20 %}
+                This student has a home post code relating to SIMD 20%<br />
+            {% endif %}
+            {% if record.simd40 %}
+                This student has a home post code relating to SIMD 40%<br />
+            {% endif %}
+            {% if record.first_attending_university %}
+                This student is the first from their family attending university<br />
+            {% endif %}
+            {% if record.looked_after_child %}
+                This student was a looked after child<br />
+            {% endif %}
+            {% if record.low_income_family %}
+                This student is from a low income family<br />
+            {% endif %}
+            {% if record.young_carer %}
+                This student is a young carer<br />
+            {% endif %}
+            {% if record.asylum_refugee %}
+                This student is an asylum seeker and/or refugee<br />
+            {% endif %}
+            {% if record.law_application %}
+                This student is making a law application<br />
+            {% endif %}
+            {% if record.early_application %}
+                This student is making an early application<br />
+            {% endif %}
+            {% if record.main_language_at_home and record.main_language_at_home != "" %}
+                Main language at home is {{ record.main_language_at_home }}<br>
+            {% endif %}
+            {% if record.estranged %}
+                This student is currently estranged<br>
+            {% endif %}
+            {% if record.transition_course_taking %}
+                This student is taking the LEAPS Transitions Course, credit-rated for 20 credits (SCQF Level 7), 
+                focusing on developing key academic skills and practical learning strategies required for a 
+                positive transition into higher education. For more information please visit 
+                www.leapsonline.org/transitions-admissions
+            {% endif %}
+        </p>
+        {% if application.notes != "" %}
+            <p>{{ application.notes|safe }}</p>
+        {% endif %}
+        {% if record.additional_comments != "" %}
+            <p>{{ record.additional_comments|safe }}</p>
+        {% endif %}
+        <br><br>
+
+        <h3>Course enquiry</h3>
+        <h4>{{ application.level }} - {{ application.subject }}</h4>
+        <p><b>Would you consider this student, and if so please detail the likely offer **</b></p>
+        <p>{{ application.consider }}. {{ application.conditions }}</p>
+
+        <!--
+        <p><strong>Would you consider LEAPS Summer School reports as an indication of potential to succeed, should the student fail to meet the conditions set?</strong>
+        {% if 'summer_school' not in application %}
+            &nbsp;&nbsp; YES / NO
+        {% else %}
+            {% if application.summer_school %}
+                &nbsp;&nbsp; YES</p>
+            {% else %}
+                &nbsp;&nbsp; NO</p>
+            {% endif %}
+        {% endif %}
+        -->
+        
+        <p><br />Notes:</p>
+        
+        <p>* Admissions staff at LEAPS partner Universities pledge to make offers to LEAPS eligible applicants if at all possible. 
+        Students should be asked to meet the usual minimum offer, even if this means setting tough conditions.</p>
+
+        <p>** This could include academic and non-academic conditions e.g. portfolio, relevant experience, audition, interview.</p>
+        
+    </body>
+</html>
+

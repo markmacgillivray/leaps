@@ -1,0 +1,90 @@
+{% extends "leaps/admin/admin-base.html" %}
+
+{% block content %}
+
+{% if stats %}
+<div class="row-fluid">
+    <div class="span3">
+        <div class="alert alert-info" style="min-height:110px;">
+            <p><span style="font-size:24px;">{{stats.total_submitted}}</span> students have submitted surveys <br>(overview figures for current archive only, and not including TEST records).</p>
+            <p><a href="/admin/student" class="btn btn-info">Manage students</a></p>
+        </div>
+    </div>
+    <div class="span3">
+        <div class="alert alert-info" style="min-height:110px;">
+            <p><span style="font-size:24px;">{{stats.new}}</span> students are at new status.</p>
+            <p><span style="font-size:24px;">{{stats.interviewed}}</span> students are at interviewed status.</p>
+        </div>
+    </div>
+    <div class="span3">
+        <div class="alert alert-info" style="min-height:110px;">
+            <p><span style="font-size:24px;">{{stats.schools_with_students_submitted}}</span> of the 
+            <span style="font-size:24px;">{{stats.total_schools - 1}}</span> 
+            registered schools <br>have had students submit surveys.</p>
+            {% if current_user.do_admin %}
+            <p><a class="btn btn-info" href="/schools">Go to the schools view</a></p>
+            {% endif %}
+        </div>
+    </div>
+    <div class="span3">
+        <div class="alert alert-info" style="min-height:110px;">
+            <p><span style="font-size:24px;">{{stats.number_of_interviews_done}}</span> admin forms have been saved but not completed.</p>
+            <p><span style="font-size:24px;">{{stats.number_of_interviews_completed}}</span> admin forms have been completed, ready to email.</p>
+            <p><span style="font-size:24px;">{{stats.number_of_action_plans_awaiting_email}}</span> action plans have not been emailed.</p>
+            {% if current_user.do_admin %}
+            {% if stats.number_of_action_plans_awaiting_email != 0 %}
+            <p><a class="btn btn-info" href="/interviews/unemailed/email">Email the {{stats.number_of_action_plans_awaiting_email}} action plans</a></p>
+            {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</div>    
+    
+<div class="row-fluid">
+    <div class="span3">
+        <div class="alert alert-info" style="min-height:110px;">
+            <p><span style="font-size:24px;">{{stats.students_pae_requested}}</span> students have had PAEs requested.</p>
+            <p><span style="font-size:24px;">{{stats.number_of_pae_requested}}</span> PAEs have been requested overall.</p>
+        </div>
+    </div>
+    <div class="span3">
+        <div class="alert alert-info" style="min-height:110px;">
+            <p><span style="font-size:24px;">{{stats.number_of_pae_replies}}</span> PAE replies have been received.</p>
+            <p><span style="font-size:24px;">{{stats.number_of_pae_issued}}</span> PAEs have been issued by email via this interface.</p>
+        </div>
+    </div>
+    <div class="span3">
+        <div class="alert alert-info" style="min-height:110px;">
+            <p><span style="font-size:24px;">{{stats.number_of_pae_awaiting_email}}</span> PAE answers have not been emailed.</p>
+            {% if current_user.do_admin %}
+            {% if stats.number_of_pae_awaiting_email != 0 %}
+            <p><a class="btn btn-info" href="/universities/pae/unemailed/email">Email the {{stats.number_of_pae_awaiting_email}} outstanding PAEs</a></p>
+            {% endif %}
+            <p><a class="btn btn-info" href="/universities">Go to the universities PAE view</a></p>
+            {% endif %}
+        </div>
+    </div>
+    <div class="span3">
+        <div class="alert alert-success" style="min-height:110px;">
+            <p>You are logged in as {{current_user.id}}. 
+            {% if current_user.is_super %}
+                You are the super user. You can edit anything, edit user accounts, and turn surveys and interfaces on and off.
+            {% else %}
+                {% if current_user.do_admin %} You have full edit and export ability.
+                {% elif current_user.edit_students %} You can create and edit student records.
+                {% else %} You can view administrative data, but you cannot edit.
+                {% endif %}
+            {% endif %}
+            </p>
+            <p>
+            {% if current_user.view_admin %}
+            <a class="btn btn-success" href="/account/{{current_user.id}}">Account</a>
+            {% endif %}
+            <a class="btn btn-success" href="/account/logout">Logout</a></p>
+        </div>
+    </div>
+</div>
+
+{% endif %}
+
+{% endblock %}

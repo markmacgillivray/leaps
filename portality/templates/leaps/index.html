@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+  <div id="logo">
+		<img src="/static/leaps_banner.png" alt="A group of students from the Lothians Equal Access Programme for Schools" title="A group of students from the Lothians Equal Access Programme for Schools" />
+	</div>
+
+  <div class="row-fluid">
+    <div class="span4">
+  		<img style="width:100%; margin-bottom:50px;" src="/static/leaps_logo_cropped.png" alt="Lothians Equal Access Programme for Schools Logo" title="Lothians Equal Access Programme for Schools Logo">
+  		<a target="_blank" class="btn btn-info" style="width:100%;" href="https://leapsonline.org/node/1602">Learn more about LEAPS eligibility</a><br><br>
+  		<a class="btn btn-primary" style="width:100%;" href="/survey">Start the survey form</a>
+    </div>
+
+    <div class="span1">
+      <p></p>
+    </div>
+
+    <div class="span7">
+      <h2>Lothians Equal Access Programme for Schools</h2>
+
+      <p>We support talented young people in South East Scotland providing them with information and encouragement to apply to higher education. We work with schools in the region, targeting young people with little or no family experience of higher education or those who may have experienced adverse social and/or economic circumstances.</p>
+
+      <p>Support for the UCAS process begins with eligible students completing our <a class="inline" href="/survey">online survey form</a>. 
+      Providing as much detail as possible at this stage increases the benefit of any forthcoming face to 
+      face interview. To find out more about what your LEAPS interview will involve, have a look at the 
+      <a href=" https://leapsonline.org/schoolstudents/s6-blog/leaps-11-interview">LEAPS S6 - Blog</a></p>
+      
+      <p>All data is collected and stored securely, and used only in accordance with our 
+      <a class="inline" href="/policy">data policy</a>.</p>
+    </div>
+  </div>
+
+<style>
+  #footer_logo {
+    display: none;
+  }
+</style>
+
+<script>
+  $(document).ready(function() {
+    $('#footer_address').removeClass('span5').addClass('span6');
+    $('#footer_contacts').removeClass('span2').addClass('span3');
+  });
+</script>
+{% endblock %}

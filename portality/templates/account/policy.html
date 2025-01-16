@@ -1,0 +1,60 @@
+{% if current_user.view_admin %}
+{% extends "leaps/admin/admin-base.html" %}
+{% else %}
+{% extends "base.html" %}
+{% endif %}
+
+{% block content %}
+
+{% if current_user.view_admin %}
+{% else %}
+<div id="logo">
+	<img src="/static/leaps_banner.png" alt="A group of students from the Lothians Equal Access Programme for Schools" title="A group of students from the Lothians Equal Access Programme for Schools" />
+</div>
+{% endif %}
+
+<div class="row-fluid">
+    <div class="span12">
+        <h1>Please find below our User Access Terms</h1>
+
+        <p>LEAPS Survey Database - LEAPS staff, Schools &amp; Universities Access Policy</p>
+ 
+        <p>I acknowledge that I am responsible for the security, privacy and control of the confidential data in my possession as 
+          taken from the leapssurvey.org database.</p>
+
+        <p>Due to the personal and time-sensitive nature of the confidential data I am accessing via the leapssurvey.org database, 
+          I agree to the following:</p>
+
+        <ul>
+        <li>To access and share data responsibly, and solely on a legitimate need-to-know basis, in order to support students' applications 
+          to Further and Higher Education institutions.</li>
+        <li>To securely store any data I access (in any format).</li>
+        <li>To protect any data in my possession from unauthorised use, disclosure or alteration.</li>
+        <li>To securely destroy any data I access and retain as soon as it is no longer needed.</li>
+        <li>To keep my individual log-in credentials confidential.</li>
+        <li>To advise LEAPS as soon as possible if my log-in credentials are no longer required.</li>
+        <li>To securely log-out of leapssurvey.org database each time I use it.</li>
+        </ul>
+ 
+        <p>Note that logging in to this system will set a cookie on your internet browser. This cookie is a purely functional cookie, 
+        used only to track your login status so that you do not need to login again on every page load. It does not collect or contain 
+        personal information about you, and no part of the cookie or system shares any of your data with any third party system.</p>
+        
+        <p>If you would like further information regarding our privacy policy, please <a href="/policy">see here</a>.</p>
+
+        <form id="agree" method="POST" action="">
+            <input class="btn" type="submit" name="submit" value="I wish to proceed to the LEAPS survey database">
+        </form>
+    </div>
+</div>
+
+<script>
+jQuery(document).ready(function() {
+  if (window.location.search.indexOf('next=') === -1) {
+    $('#agree').hide();
+  }
+});
+</script>
+
+{% endblock %}
+
