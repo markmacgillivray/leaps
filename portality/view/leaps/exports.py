@@ -3,7 +3,7 @@ from copy import deepcopy
 from datetime import datetime
 from io import StringIO
 
-import json, string
+import json
 
 from flask import Blueprint, request, abort, render_template, redirect, send_file
 from flask_login import current_user
@@ -53,7 +53,7 @@ def index():
 
 def fixify(strng):
     newstr = ''
-    allowed = string.lowercase + string.uppercase + "@!%&*()_-+=;:~#./?[]{}, '" + '0123456789'
+    allowed = 'abcdefghijklmnopqrstuvwxyz' + 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' + "@!%&*()_-+=;:~#./?[]{}, '" + '0123456789'
     for part in strng:
         if part == '\n':
             newstr += '  '

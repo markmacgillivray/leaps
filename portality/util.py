@@ -1,4 +1,4 @@
-import os, string, struct
+import os, struct
 from functools import wraps
 from flask import request, current_app
 
@@ -35,7 +35,7 @@ def dewindows(string):
 
          
 def generate_password(length=8):
-    chars = string.lowercase + string.uppercase + string.digits + '@#'
+    chars = 'abcdefghijklmnopqrstuvwxyz' + 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' + '0123456789' + '@#'
     return ''.join(chars[struct.unpack('>q',os.urandom(8))[0] % 64] for i in range(length))
     
 
