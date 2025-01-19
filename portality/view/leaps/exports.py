@@ -250,7 +250,7 @@ def download_csv(recordlist,keys):
     return send_file(
         csvdata, 
         mimetype='text/csv',
-         attachment_filename="leaps_export_" + datetime.now().strftime("%d%m%Y%H%M") + ".csv",
+        download_name="leaps_export_" + datetime.now().strftime("%d%m%Y%H%M") + ".csv",
         as_attachment=True
     )
 
