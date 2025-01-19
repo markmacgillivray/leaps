@@ -120,24 +120,24 @@ def download_csv(recordlist,keys):
                 if fk:
                     fk = False
                 else:
-                    csvdata.write(',')
+                    csvdata.write(b',')
                 if key == 'simd_pc':
-                    csvdata.write('"simd %"')
+                    csvdata.write(b'"simd %"')
                 elif key == 'summer_school':
-                    csvdata.write('"summer school interest"')
+                    csvdata.write(b'"summer school interest"')
                 else:
-                    csvdata.write('"' + key + '"')
-            csvdata.write('\n')
+                    csvdata.write(b'"' + key + '"')
+            csvdata.write(b'\n')
             firstrecord = False
         else:
-            csvdata.write('\n')
+            csvdata.write(b'\n')
         # and then add each record as a line with the keys as chosen by the user
         firstkey = True
         for key in keys:
             if firstkey:
                 firstkey = False
             elif key not in ['institution','pae_requested','notes','pae_replied','pae_consider','pae_conditions','gender_other']:
-                csvdata.write(',')
+                csvdata.write(b',')
             if (key in record.keys() or key in ['address','simd_pc']) and key != 'gender_other' and key != 'pae_requested':
                 if key == 'applications':
                     appns = ""
@@ -240,11 +240,11 @@ def download_csv(recordlist,keys):
                     except:
                         pass
                 try:
-                    csvdata.write('"' + tidykey + '"')
+                    csvdata.write(b'"' + tidykey + '"')
                 except:
                     print("errored on writing a key to the csvdata, probably because of ascii error")
             elif key not in ['gender_other','pae_requested']:
-                csvdata.write("")
+                csvdata.write(b"")
     # dump to the browser as a csv attachment
     csvdata.seek(0)
     return send_file(
