@@ -110,7 +110,7 @@ def download_csv(recordlist,keys):
         keys = keys + ['applications','institution','pae_requested','notes','pae_replied','pae_consider','pae_conditions']
 
     # make a csv string of the records
-    csvdata = StringIO.StringIO()
+    csvdata = StringIO()
     firstrecord = True
     for record in recordlist:
         # for the first one, put the keys on the first line, otherwise just newline
