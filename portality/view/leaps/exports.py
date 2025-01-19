@@ -126,7 +126,7 @@ def download_csv(recordlist,keys):
                 elif key == 'summer_school':
                     csvdata.write(b'"summer school interest"')
                 else:
-                    csvdata.write(b'"' + bytes(key) + '"')
+                    csvdata.write(b'"' + bytes(key, 'utf-8') + '"')
             csvdata.write(b'\n')
             firstrecord = False
         else:
@@ -240,7 +240,7 @@ def download_csv(recordlist,keys):
                     except:
                         pass
                 try:
-                    csvdata.write(b'"' + bytes(tidykey) + b'"')
+                    csvdata.write(b'"' + bytes(tidykey, 'utf-8') + b'"')
                 except:
                     print("errored on writing a key to the csvdata, probably because of ascii error")
             elif key not in ['gender_other','pae_requested']:
