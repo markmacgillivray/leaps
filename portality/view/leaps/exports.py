@@ -1,7 +1,7 @@
 
 from copy import deepcopy
 from datetime import datetime
-from io import StringIO
+from io import BytesIO
 
 import json
 
@@ -110,7 +110,7 @@ def download_csv(recordlist,keys):
         keys = keys + ['applications','institution','pae_requested','notes','pae_replied','pae_consider','pae_conditions']
 
     # make a csv string of the records
-    csvdata = StringIO()
+    csvdata = BytesIO()
     firstrecord = True
     for record in recordlist:
         # for the first one, put the keys on the first line, otherwise just newline
