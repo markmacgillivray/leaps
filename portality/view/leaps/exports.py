@@ -126,7 +126,7 @@ def download_csv(recordlist,keys):
                 elif key == 'summer_school':
                     csvdata.write(b'"summer school interest"')
                 else:
-                    csvdata.write(b'"' + bytes(key, 'utf-8') + '"')
+                    csvdata.write(b'"' + bytes(key, 'utf-8') + b'"')
             csvdata.write(b'\n')
             firstrecord = False
         else:
