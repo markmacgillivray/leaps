@@ -36,12 +36,14 @@ def index(model=None, deleteall=False):
         records = []
         if "csv" in request.files.get('upfile').filename:
             upfile = request.files.get('upfile')
-            reader = csv.DictReader( str(upfile) )
+            content = str(upfile.read().decode('utf-8')).splitlines()
+            reader = csv.DictReader( content )
             records = [ row for row in reader ]
             sourcetype = "csv"
         elif "json" in request.files.get('upfile').filename:
             upfile = request.files.get('upfile')
-            records = json.load(upfile) # does this need to be wrapped in str() as well?
+            content = str(upfile.read().decode('utf-8'))
+            records = json.loads(content)
             sourcetype = "json"
 
         if model is None:
