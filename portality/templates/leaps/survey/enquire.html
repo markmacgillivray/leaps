@@ -49,7 +49,7 @@
     var lookup = function(e) {
 			$.ajax({
 				url: 'https://leapssurvey.org/query/simd/_search' + '?sort=post_code&q=id:' + $('#leaps_pc_lookup').val().toLowerCase().replace(/ /g,'') + '*',
-				type: 'POST',
+				type: 'GET',
 				dataType: 'JSONP',
 				success: function(data) {
 					$('.sections').hide();
