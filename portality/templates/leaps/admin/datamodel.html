@@ -85,7 +85,7 @@ jQuery(document).ready(function($) {
                         {% if record %}
                         <input class="btn btn-danger" type="submit" name="submit" value="Delete">
                         {% if model == 'institution' %}
-                        <a class="btn" href="/universities?institution={{record.data.name}}">View institutional PAEs page</a>
+                        <a class="btn" href="/universities?institution={{record.data.name}}">View institutional Course enquiries page</a>
                         {% else %}
                         <a class="btn" href="/schools?school={{record.data.name}}">View school submissions page</a>
                         {% endif %}

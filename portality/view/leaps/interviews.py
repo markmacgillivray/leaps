@@ -165,6 +165,10 @@ def interviewForm(sid):
                 elif val == "no" or val == "off":
                     val = False
                 student.data['interview'][field] = val
+                if field == 'update_email' and request.form[field] != student.data.get('email',False):
+                    student.data['email'] = request.form[field]
+                if field == 'update_mobile' and request.form[field] != student.data.get('mobile_phone',False):
+                    student.data['mobile_phone'] = request.form[field]
             elif field in ['submit_and_complete'] and not student.data['interview'].get('completed_date', False):
                 student.data['interview']['completed_date'] = datetime.now().strftime("%d/%m/%Y")
                 student.data['interview']['status'] = 'complete'
@@ -289,7 +293,7 @@ The questionnaire should take no more than 5 minutes to complete. Completing the
 questionnaire allows us to make sure LEAPS support is as effective as possible for
 future LEAPS pupils. You can complete the questionnaire here: 
 
-https://app.onlinesurveys.jisc.ac.uk/s/edinburgh/leaps-pre-ucas-interviews-2024-post-interview-questionnaire-1
+https://app.onlinesurveys.jisc.ac.uk/s/edinburgh/leaps-pre-ucas-interviews-2025-post-interview-questionnaire-1
 
 (You might have completed a questionnaire before your interview - if so, thank you! We
 ask you to also complete this questionnaire so we can find out more about the impact of

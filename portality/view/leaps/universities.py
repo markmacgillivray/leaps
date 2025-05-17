@@ -82,7 +82,7 @@ def pae(appid):
         
         if request.method == 'GET':
             if application.get('pae_reply_received',False):
-                msg = 'This Pre-Application Enquiry was responded to on ' + application['pae_reply_received']
+                msg = 'This Course Enquiry was responded to on ' + application['pae_reply_received']
                 if current_user.do_admin:
                     msg += ". The university contacts can view it but cannot alter it."
                 else:
@@ -107,8 +107,8 @@ def pae(appid):
                 application['summer_school'] = request.form.get('summer_school',False)
 
                 # change record status too, if first or last PAE answer
-                if student.data['status'] == 'paes_requested':
-                    student.data['status'] = 'paes_in_progress'
+                if student.data['status'] == 'course_enquiries_requested':
+                    student.data['status'] = 'course_enquiries_in_progress'
 
                 '''this has been disabled in favour of only marking complete once emailed by leaps
                 complete = True
@@ -116,7 +116,7 @@ def pae(appid):
                     if not appn.get('pae_reply_received',False):
                         complete = False
                 if complete and student.data['status'].startswith('paes'):
-                    student.data['status'] = 'paes_complete'
+                    student.data['status'] = 'course_enquiries_complete'
                 '''
 
                 student.save()
@@ -126,8 +126,8 @@ def pae(appid):
                     #if app.config.get('ADMIN_EMAIL',False):
                     #    to.append(app.config['ADMIN_EMAIL'])
                     fro = app.config['LEAPS_EMAIL']
-                    subject = "PAE response received"
-                    text = "A response has been received via the online PAE response form.\n\n"
+                    subject = "Course enquiry response received"
+                    text = "A response has been received via the online Course enquiry response form.\n\n"
                     text += "You can view the response at:\n\n"
                     text += "https://leapssurvey.org/universities/pae/" + appid
                     text += "\n\nThanks!"
@@ -166,7 +166,7 @@ def email(appid):
                 student, application = _get_student_for_appn(appn)
                 _email_pae(student, application, False)
             time.sleep(1)
-            flash(str(len(paes)) + ' PAEs were emailed','success')
+            flash(str(len(paes)) + ' course enquiries were emailed','success')
             return redirect('/admin')
         else:
             student, application = _get_student_for_appn(appid)
@@ -250,31 +250,31 @@ def _email_pae(student, application, flashable=True):
             if foundone:
                 text += " )\n\n"
 
-        text += '''Pre-Application Enquiry (PAE) Response
+        text += '''Course Enquiry Response
 
-    Following your LEAPS interview, we raised a Pre-Application Enquiry (PAE) with a university on your behalf. We asked whether or not they are likely to make you an offer for the course you are interested in, based on your qualifications to date.
+    Following your LEAPS interview, we raised a Course Enquiry with a university on your behalf. We asked whether or not they are likely to make you an offer for the course you are interested in, based on your qualifications to date.
 
     Please see the attached document for full details of their response. Make sure that you read everything carefully. Take time to check that all your qualifications are correct - the university's response is based on your qualifications as listed.
 
-    This Pre-Application Enquiry (PAE) is a guide for you. Its purpose is to help you make the best use of your five UCAS choices by giving you an indication of how universities are likely to view your application. 
+    This Course Enquiry is a guide for you. Its purpose is to help you make the best use of your five UCAS choices by giving you an indication of how universities are likely to view your application. 
 
     If the university has said no, it will not be worthwhile making the same choice on your UCAS application. Pay attention to the reasons given for this response and make use of any comments when you come to make your final UCAS choices.
 
     If the university has said yes - great news! However do bear in mind that this is NOT a formal offer of study, nor does it guarantee that you will receive an offer. You still need to apply through UCAS and admissions tutors will take into account all of the information on your application. This includes your personal statement, academic reference and predicted grades. Competition for places will also
     be a factor as demand tends to fluctuate from year-to-year.
 
-    If you have any questions at all regarding your PAE response, please contact us on LEAPS@ed.ac.uk or 07774 336265. We have copied this email to your school so that you can also discuss any concerns with your guidance teacher or UCAS co-ordinator.
+    If you have any questions at all regarding your course enquiry response, please contact us on LEAPS@ed.ac.uk or 07774 336265. We have copied this email to your school so that you can also discuss any concerns with your guidance teacher or UCAS co-ordinator.
 
     Kind regards,
     The LEAPS team
 
     ***Please note you will receive a separate email for each course we have enquired about. Responses may be received at different times.***'''
 
-        subject = "LEAPS PAE enquiry feedback"
+        subject = "LEAPS course enquiry feedback"
 
         files = [{
             'content': paepdf(application['appid'],giveback=True), 
-            'filename': 'LEAPSPAE_' + studentname.replace(" ","_") + '_' + application['institution'] + '.pdf'
+            'filename': 'LEAPS_course_enquiry_' + studentname.replace(" ","_") + '_' + application['institution'] + '.pdf'
         }]
 
         util.send_mail(to=to, fro=fro, subject=subject, text=text, files=files)
@@ -287,12 +287,12 @@ def _email_pae(student, application, flashable=True):
                 all_mailed = False
 
         if all_mailed and student.data['status'].startswith('paes'):
-            student.data['status'] = 'paes_complete'
+            student.data['status'] = 'course_enquiries_complete'
 
         student.save()
 
         if flashable:
-            flash('PAE has been emailed to ' + ",".join(to), "success")
+            flash('Course enquiry has been emailed to ' + ",".join(to), "success")
     except:
         flash('There was an error processing the email. Please check and try again.')
 
@@ -369,7 +369,7 @@ def _get_paes_awaiting_email():
                 ],
                 'must_not':[
                     {'term':
-                        {'status'+app.config['FACET_FIELD']:'paes_complete'}
+                        {'status'+app.config['FACET_FIELD']:'course_enquiries_complete'}
                     }
                 ]
             }

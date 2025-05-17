@@ -62,7 +62,12 @@
             </tr>
         </table>
         
-        <h3>Summary of discussion / key action points</h3>
+        <h3>Summary of discussion</h3>
+        <div style="border: 1px solid #ccc; padding-bottom: 30px;">
+            {{ record.interview.summary.replace('\r\n', '<br>') }}
+        </div>
+
+        <h3>Research and action points for you</h3>
         <div style="border: 1px solid #ccc; padding-bottom: 30px;">
             {{ record.interview.action_points.replace('\r\n', '<br>') }}
         </div>
@@ -81,21 +86,23 @@
             </tr>
         </table>
         
-        <h3>HNC / HND courses / articulation routes discussed, to research</h3>
+        <h3>Plan B or other options</h3>
         <table>
             <tr>
                 <td><p>{{ record.interview.hn_courses_discussed.replace('\r\n', '<br>') }}</p></td>
             </tr>
         </table>
 
-        <h3>Pre-application enquiries</h3>
+        <h3>Course enquiries</h3>
         <table>
             <tr>
                 <td>
-                    <p>You will hear directly from the university if you would be made an offer based on your exam results. 
-                        This is not an offer but an indication from the university, if you were to apply via UCAS</p>
-                    <p>Pre-application enquires will be raised on your behalf, for the following 
-                    courses, if any:</p>
+
+                    <p>You will hear directly from the university if you would be made an offer based on your exam result. 
+                    Please note that their reply is NOT an offer to study with them but an indication and you still need 
+                    to submit a strong application through UCAS.</p>
+ 
+                    <p>Course enquires will be raised on your behalf, for the following courses, if any:</p>                     
                     
                     {% if record.interview.applications %}
                     {% for app in record.interview.applications %}
@@ -107,8 +114,8 @@
             </tr>
             <tr>
                 <td>
-                    <p>Find out more about pre-application enquiries in our pre-application enquiries blog post at 
-                    <a href="https://leapsonline.org/schoolstudents/s6-blog/what-pre-application-enquiry">https://leapsonline.org/schoolstudents/s6-blog/what-pre-application-enquiry</a></p>
+                    <p>Find out more about course enquiries in our blog post at
+                    <a href="https://leapsonline.org/schoolstudents/s6-blog/what-course-enquiry">https://leapsonline.org/schoolstudents/s6-blog/what-course-enquiry</a></p>
                 </td>
             </tr>
         </table>
@@ -119,9 +126,13 @@
             <tr>
                 <td>
                     <p>LEAPS will be in touch with you with more information relating to support for students who have experienced care.</p>
-                    <p>Please tick the 'Have you been in care?' box on the UCAS form when you apply. Find out more about this UCAS tick 
-                    box at <a href="https://www.ucas.com/file/37276/download?token=-o8W4U-c">https://www.ucas.com/file/37276/download?token=-o8W4U-c</a>.</p>
-                    <p>More information available at: <a href="https://leapsonline.org/schoolstudents/care-experienced-students">https://leapsonline.org/schoolstudents/care-experienced-students</a></p>
+                    <p>In the 'Diversity and Inclusion' section of the UCAS application, scroll down to Care Support Information and please 
+                        tick the 'Have you been in care?' box on the UCAS form when you apply with additional questions below. 
+                        Please watch our helpful video for more information 
+                        <a href="https://leapsonline.org/schoolstudents/blogs/how-identify-yourself-care-experienced-your-ucas-application#:~:text=1%20Log%20in%20to%20your%20UCAS%20HUB%20and,option%20that%20best%20applies%20to%20you%20More%20items">How to Identify Yourself as Care Experienced on your UCAS Application | LeapsOnline</a>
+                        and visit UCAS 
+                        <a href="https://www.ucas.com/applying/applying-university/individual-needs/care-experienced-students#the-ucas-application-%E2%80%93-sharing-your-circumstances">https://www.ucas.com/applying/applying-university/individual-needs/care-experienced-students#the-ucas-application-%E2%80%93-sharing-your-circumstances</a>
+                    </p>
                 </td>
             </tr>
         </table>
@@ -175,12 +186,15 @@
             <tr>
                 <td>
                     <h4>Open Days</h4>
-                    <p>You might not be able to attend college/university open days in person just now, but keep an
-                    eye out for updates as some might be available as online/virtual events and some might take
-                    place on campuses later in the year if they are able to go ahead.</p>
+                    <p>Open Days are a fantastic opportunity to get a feel for a university or college campus, 
+                        as well as speaking to lecturers and current students about their experiences of the course and institution. 
+                        We recommend getting the full benefit of Open Days by attending in person if you can, 
+                        don't worry if this isn't an option for you - universities and colleges often offer online/virtual open days; 
+                        keep an eye on their websites for updates.</p> 
+
                     <p>UCAS Open Days information:<br><a href="https://www.ucas.com/undergraduate/what-and-where-study/open-days-and-events/open-days-tips">https://www.ucas.com/undergraduate/what-and-where-study/open-days-and-events/open-days-tips</a></p>
 
-                    <p>LEAPS Open Days blog post:<br><a href="https://leapsonline.org/schoolstudents/s5hub/open-days">https://leapsonline.org/schoolstudents/s5hub/open-days</a></p>
+                    <p>LEAPS Open Days blog post:<br><a href="https://leapsonline.org/schoolstudents/s6-blog/open-days">https://leapsonline.org/schoolstudents/s6-blog/open-days</a></p>
                 </td>
             </tr>
             
@@ -200,7 +214,7 @@
                         <li>In the Education section, click 'Add qualification' under your school.</li>
                         <li>Scroll down and in the Search by name box, type in 'LEAPS', and select the LEAPS Transition Course.</li>
                         <li>Under Title, type in 'LEAPS Transitions Course: 20 credits, SCQF Level 7'.</li>
-                        <li>The qualification date is '06/2025'.</li>
+                        <li>The qualification date is '06/2026'.</li>
                         <li>The awarding organisation is 'LEAPS'.</li>
                         <li>Leave the grade, and module/unit boxes blank.</li>
                         <li>Scroll down and click Save qualifications.</li>
@@ -227,9 +241,9 @@
                     Type: "LEAPS: I am a LEAPS-eligible student.
                     Please see www.leapsonline.org for more information."</li>
                     <li>Start date:<br>
-                    Select 16/08/2023 (this is to demonstrate the start of your S5)</li>
+                    Select 14/08/2024 (this is to demonstrate the start of your S5)</li>
                     <li>End date:<br>
-                    Select 26/06/2025 (this is to demonstrate the end of your S6)</li>
+                    Select 26/06/2026 (this is to demonstrate the end of your S6)</li>
                     </ul>
                     <p>For more information, follow our guide which shows you how to identify yourself as a LEAPS student
                     on your UCAS application at <a href="https://www.leapsonline.org/leaps-ucas-application">www.leapsonline.org/leaps-ucas-application</a>.</p>
@@ -260,12 +274,13 @@
 
             <tr>
                 <td>
-
                     <h4>LEAPS S6 Blog</h4>
-                    <p>Visit our LEAPS S6 Blog at <a href="https://leapsonline.org/schoolstudents/s6-blog">https://leapsonline.org/schoolstudents/s6-blog</a> 
-                    for tips and advice on higher education - you might like our recent blog
-                    post about career and course exploration during COVID-19:<br>
-                    <a href="https://leapsonline.org/schoolstudents/s6-blog/career-and-course-exploration-during-covid-19">https://leapsonline.org/schoolstudents/s6-blog/career-and-course-exploration-during-covid-19</a></p>
+                    <p>Visit our LEAPS S6 Blog at 
+                        <a href="https://leapsonline.org/schoolstudents/s6-blog">https://leapsonline.org/schoolstudents/s6-blog</a>
+                        for tips and advice on higher education - you might like our recent blog post about career and course exploration, 
+                        exploring and finding out more about the career or subject area you are interested in - 
+                        <a href="https://leapsonline.org/schoolstudents/s6-blog/career-and-course-exploration">https://leapsonline.org/schoolstudents/s6-blog/career-and-course-exploration</a>
+                    </p>
                 </td>
             </tr>
             

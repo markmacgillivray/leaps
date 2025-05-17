@@ -43,24 +43,24 @@
 <div class="row-fluid">
     <div class="span3">
         <div class="alert alert-info" style="min-height:110px;">
-            <p><span style="font-size:24px;">{{stats.students_pae_requested}}</span> students have had PAEs requested.</p>
-            <p><span style="font-size:24px;">{{stats.number_of_pae_requested}}</span> PAEs have been requested overall.</p>
+            <p><span style="font-size:24px;">{{stats.students_pae_requested}}</span> students have had course enquiries requested.</p>
+            <p><span style="font-size:24px;">{{stats.number_of_pae_requested}}</span> course enquiries have been requested overall.</p>
         </div>
     </div>
     <div class="span3">
         <div class="alert alert-info" style="min-height:110px;">
-            <p><span style="font-size:24px;">{{stats.number_of_pae_replies}}</span> PAE replies have been received.</p>
-            <p><span style="font-size:24px;">{{stats.number_of_pae_issued}}</span> PAEs have been issued by email via this interface.</p>
+            <p><span style="font-size:24px;">{{stats.number_of_pae_replies}}</span> course enquiry replies have been received.</p>
+            <p><span style="font-size:24px;">{{stats.number_of_pae_issued}}</span> course enquiries have been issued by email via this interface.</p>
         </div>
     </div>
     <div class="span3">
         <div class="alert alert-info" style="min-height:110px;">
-            <p><span style="font-size:24px;">{{stats.number_of_pae_awaiting_email}}</span> PAE answers have not been emailed.</p>
+            <p><span style="font-size:24px;">{{stats.number_of_pae_awaiting_email}}</span> course enquiry answers have not been emailed.</p>
             {% if current_user.do_admin %}
             {% if stats.number_of_pae_awaiting_email != 0 %}
-            <p><a class="btn btn-info" href="/universities/pae/unemailed/email">Email the {{stats.number_of_pae_awaiting_email}} outstanding PAEs</a></p>
+            <p><a class="btn btn-info" href="/universities/pae/unemailed/email">Email the {{stats.number_of_pae_awaiting_email}} outstanding course enquiries</a></p>
             {% endif %}
-            <p><a class="btn btn-info" href="/universities">Go to the universities PAE view</a></p>
+            <p><a class="btn btn-info" href="/universities">Go to the universities course enquiries view</a></p>
             {% endif %}
         </div>
     </div>

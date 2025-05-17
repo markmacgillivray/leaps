@@ -24,10 +24,16 @@ def intro():
     # make this an actual decision on whether or not survey is open or closed
     adminsettings = models.Account.pull(app.config['SUPER_USER'][0]).data.get('settings',{})
     if adminsettings.get('survey',False):
-        return redirect(url_for('.student'))
+        #return redirect(url_for('.student'))
+        return redirect(url_for('.enquire'))
     else:
         return render_template('leaps/survey/closed.html')
         
+
+# a generic form completion confirmation page
+@blueprint.route('/enquire')
+def enquire():
+    return render_template('leaps/survey/enquire.html')
 
 # a generic form completion confirmation page
 @blueprint.route('/complete')

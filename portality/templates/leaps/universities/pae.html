@@ -43,14 +43,14 @@ jQuery(document).ready(function() {
         <a class="btn" href="/universities/pae/{{application.appid}}/email">Email this form to the student and school contacts</a> 
         {% endif %}
         <a class="btn" href="/universities">Back to listing</a> 
-        <a class="btn" href="/universities/pae/{{application.appid}}.pdf">Print this PAE form</a>
+        <a class="btn" href="/universities/pae/{{application.appid}}.pdf">Print this course enquiry</a>
         </p>
 
         <h1>Lothians Equal Access Programme for Schools</h1>
-        <h2>Pre-Application Enquiry Form</h2>
+        <h2>Course Enquiry</h2>
 
         {% if not application.pae_reply_received %}
-            <p style="padding-top:20px;">Please use this form to provide your response to this Pre-Application Enquiry,
+            <p style="padding-top:20px;">Please use this form to provide your response to this Course Enquiry,
             using the information displayed to assist in making your decision.
             No information will be saved until you click the submit button at the bottom of this page.</p>
 
@@ -219,7 +219,7 @@ jQuery(document).ready(function() {
                     {% else %}
                         I, being identified by the email address / username 
                         <strong>{{ current_user.id }}</strong>, have the authority to provide 
-                        this Pre-Aplication Enquiry response on behalf of 
+                        this Course Enquiry response on behalf of 
                         <strong>{{ application.institution }}</strong>.
                     {% endif %}
                 </td>

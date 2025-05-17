@@ -261,12 +261,28 @@ td > p {
                     </tr>
 
                     <tr>
-                        <td><p>Please provide any missing contact details:</p></td>
+                        <td><p>Please provide any changes to address:</p></td>
                         <td>
-                            <textarea class="bigfield" name="missing_contact_details"
-                            >{% if student %}{% if student.data.interview %}{% if student.data.interview.missing_contact_details %}{{ student.data.interview.missing_contact_details }}{% endif %}{% endif %}{% endif %}</textarea>
+                            <textarea class="bigfield" name="alternate address"
+                            >{% if student %}{% if student.data.interview %}{% if student.data.interview.alternate_address %}{{ student.data.interview.alternate_address }}{% endif %}{% endif %}{% endif %}</textarea>
                         </td>
                     </tr>
+                    <tr>
+                        <td><p>Please provide any changes to email addres:</p></td>
+                		<td>
+                            <input type="text" name="update_email"
+                            {% if student %} value="{% if student.data.interview %}{% if student.data.interview.update_email %}{{ student.data.interview.update_email }}{% else %}{{ student.data.email }}{% endif %}{% else %}{{student.data.email}}{% endif %}"{% endif %}>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><p>Please provide any changes to mobile phone number</p></td>
+                		<td>
+                            <input type="text" name="update_mobile"
+                            {% if student %} value="{% if student.data.interview %}{% if student.data.interview.update_mobile %}{{ student.data.interview.update_mobile }}{% else %}{{ student.data.mobile_phone }}{% endif %}{% else %}{{student.data.mobile_phone}}{% endif %}"{% endif %}>
+                        </td>
+
+                    </tr>
+
                     <tr>
                         <td><p>Please provide details of any missing qualifications:</p></td>
                         <td>
@@ -290,7 +306,14 @@ td > p {
                     </tr>
 
                     <tr>
-                        <td><p>Summary of discussion / action points to go onto the student action plan:</p></td>
+                        <td><p>Summary of discussion:</p></td>
+                        <td>
+                            <textarea class="bigfield" name="summary"
+                            >{% if student %}{% if student.data.interview %}{% if student.data.interview.summary %}{{ student.data.interview.summary }}{% endif %}{% endif %}{% endif %}</textarea>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><p>Research and action points for you:</p></td>
                         <td>
                             <textarea class="bigfield" name="action_points"
                             >{% if student %}{% if student.data.interview %}{% if student.data.interview.action_points %}{{ student.data.interview.action_points }}{% endif %}{% endif %}{% endif %}</textarea>
@@ -305,7 +328,7 @@ td > p {
                     </tr>
 
                     <tr style="background-color:#ccc">
-                        <td><h4>PAEs required?</h4></td>
+                        <td><h4>Course enquiries required?</h4></td>
                         <td></td>
                         <td></td>
                         <td></td>
@@ -366,7 +389,7 @@ td > p {
                     </tr>
                                         
                     <tr>
-                        <td><p>HN courses / articulation routes (if relevant):</p></td>
+                        <td><p>Plan B or other options:</p></td>
                         <td>
                             <textarea class="bigfield" name="hn_courses_discussed"
                             >{% if student %}{% if student.data.interview %}{% if student.data.interview.hn_courses_discussed %}{{ student.data.interview.hn_courses_discussed }}{% endif %}{% endif %}{% endif %}</textarea>

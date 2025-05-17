@@ -625,7 +625,7 @@ fieldset{
                     <tr>
 	                    <td style="text-align:right;padding:6px 10px 0 0;">Status</td>
                 		<td><select id="status" name="status">
-                		    {% if record %}{% if record.data.status not in ["new", "not_eligible_interviewed", "not_eligible_not_interviewed", "not_applying_interviewed", "not_applying_not_interviewed", "allocated_to_interviewer", "awaiting_interview", "interviewed", "absent", "query", "paes_requested", "paes_in_progress", "paes_complete", "complete"] %}<option style="color:red;" selected="selected">{{record.data.status}}</option>{% endif %}{% endif %}
+                		    {% if record %}{% if record.data.status not in ["new", "not_eligible_interviewed", "not_eligible_not_interviewed", "not_applying_interviewed", "not_applying_not_interviewed", "allocated_to_interviewer", "awaiting_interview", "awaiting_phone_interview", "awaiting_phone_check", "interviewed", "absent", "query", "course_enquries_requested", "course_enquiries_in_progress", "course_enquiries_complete", "complete_interviewed", "complete_phone_check"] %}<option style="color:red;" selected="selected">{{record.data.status}}</option>{% endif %}{% endif %}
                 		    <option>new</option>
               		        <option{% if record %}{% if record.data.status == "not_eligible_interviewed" %} selected="selected"{% endif %}{% endif %}>not_eligible_interviewed</option>
               		        <option{% if record %}{% if record.data.status == "not_eligible_not_interviewed" %} selected="selected"{% endif %}{% endif %}>not_eligible_not_interviewed</option>
@@ -633,13 +633,20 @@ fieldset{
               		        <option{% if record %}{% if record.data.status == "not_applying_not_interviewed" %} selected="selected"{% endif %}{% endif %}>not_applying_not_interviewed</option>
               		        <option{% if record %}{% if record.data.status == "allocated_to_interviewer" %} selected="selected"{% endif %}{% endif %}>allocated_to_interviewer</option>
               		        <option{% if record %}{% if record.data.status == "awaiting_interview" %} selected="selected"{% endif %}{% endif %}>awaiting_interview</option>
+              		        <option{% if record %}{% if record.data.status == "awaiting_phone_interview" %} selected="selected"{% endif %}{% endif %}>awaiting_phone_interview</option>
+              		        <option{% if record %}{% if record.data.status == "awaiting_phone_check" %} selected="selected"{% endif %}{% endif %}>awaiting_phone_check</option>
               		        <option{% if record %}{% if record.data.status == "interviewed" %} selected="selected"{% endif %}{% endif %}>interviewed</option>
               		        <option{% if record %}{% if record.data.status == "absent" %} selected="selected"{% endif %}{% endif %}>absent</option>
               		        <option{% if record %}{% if record.data.status == "query" %} selected="selected"{% endif %}{% endif %}>query</option>
-              		        <option{% if record %}{% if record.data.status == "paes_requested" %} selected="selected"{% endif %}{% endif %}>paes_requested</option>
+              		        <option{% if record %}{% if record.data.status == "course_enquiries_requested" %} selected="selected"{% endif %}{% endif %}>course_enquiries_requested</option>
+              		        <option{% if record %}{% if record.data.status == "course_enquiries_in_progress" %} selected="selected"{% endif %}{% endif %}>course_enquiries_in_progress</option>
+              		        <option{% if record %}{% if record.data.status == "course_enquiries_complete" %} selected="selected"{% endif %}{% endif %}>course_enquiries_complete</option>
+              		        <!--<option{% if record %}{% if record.data.status == "paes_requested" %} selected="selected"{% endif %}{% endif %}>paes_requested</option>
               		        <option{% if record %}{% if record.data.status == "paes_in_progress" %} selected="selected"{% endif %}{% endif %}>paes_in_progress</option>
-              		        <option{% if record %}{% if record.data.status == "paes_complete" %} selected="selected"{% endif %}{% endif %}>paes_complete</option>
-              		        <option{% if record %}{% if record.data.status == "complete" %} selected="selected"{% endif %}{% endif %}>complete</option>
+              		        <option{% if record %}{% if record.data.status == "paes_complete" %} selected="selected"{% endif %}{% endif %}>paes_complete</option>-->
+              		        <option{% if record %}{% if record.data.status == "complete_interviewed" %} selected="selected"{% endif %}{% endif %}>complete_interviewed</option>
+              		        <option{% if record %}{% if record.data.status == "complete_phone_check" %} selected="selected"{% endif %}{% endif %}>complete_phone_check</option>
+              		        <!--<option{% if record %}{% if record.data.status == "complete" %} selected="selected"{% endif %}{% endif %}>complete</option>-->
                 		</select></td>
 
 	                    <td style="text-align:right;padding:6px 10px 0 0;">Archive</td>
@@ -690,11 +697,11 @@ fieldset{
 	        <div class="well">
 	            <h1>Qualifications</h1>
 							{% if current_user.edit_students and (not record or record.archive == 'current') %}
-							<p>NOTE: If you edit qualifications, any application PAEs already requested will retain 
-								the old qualifications details. If you wish to isue a new PAE for an application with 
+							<p>NOTE: If you edit qualifications, any application course enquiries already requested will retain 
+								the old qualifications details. If you wish to isue a new course enquiry for an application with 
 								new qualifications data, you should save the new qualifications data then create a new 
 								application (or applications) in the section below, and after saving those you will be 
-								able to request a new PAE for them. The new PAE will use the latest qualifications data.
+								able to request a new course enquiry for them. The new course enquiry will use the latest qualifications data.
 							</p>
 							{% endif %}
 	        </div>
@@ -796,7 +803,7 @@ fieldset{
                         <th style="min-width:200px;">College / University</th>
                         <th style="min-width:150px;">Subject</th>
                         <th style="min-width:100px;">Level of study</th>
-                        <th style="min-width:200px;">PAE requested / replied / emailed</th>
+                        <th style="min-width:180px;max-width:180px;">Course enquiry requested / replied / emailed</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -898,7 +905,8 @@ fieldset{
 
 
         
-
+{% if record %}
+{% if record.data.interests %}
 <!-- the interests page -->
 <div class="part interests">
 
@@ -944,6 +952,8 @@ fieldset{
 	</div>
 
 </div>
+{% endif %}
+{% endif %}
 
 
 
@@ -952,7 +962,8 @@ fieldset{
 
         
 
-
+{% if record %}
+{% if record.data.experience %}
 <!-- the experience page -->
 <div class="part experience">
 
@@ -1005,6 +1016,8 @@ fieldset{
 	</div>
 
 </div>
+{% endif %}
+{% endif %}
 
 
 
@@ -1276,7 +1289,7 @@ fieldset{
         	        <tr style="display:none;">
                         <td><input type="checkbox" name="pae_action"
             		    {% if record %}{% if record.data.pae_action %} checked="checked"{% endif %}{% endif %}
-            		    > PAE action</td>
+            		    > Course enquiry action</td>
                     </tr>
                 </tbody>
             </table>
@@ -1284,7 +1297,7 @@ fieldset{
                 <thead>
                     <tr>
                         <th style="min-width:400px;"><br>LEAPS internal notes (only visible here):</th>
-                        <th><br>Additional comments (will show on PDFs and PAEs):</th>
+                        <th><br>Additional comments (will show on PDFs and course enquiries):</th>
                     </tr>
                 </thead>
 	            <tbody>
@@ -1293,7 +1306,7 @@ fieldset{
                     		<textarea class="bigfield" name="leaps_notes" placeholder="LEAPS internal notes">{% if record %}{{record.data.leaps_notes}}{% endif %}</textarea>
                         </td>
                 		<td>
-                    		<textarea class="bigfield" name="additional_comments" placeholder="additional comments (will be shown on all PAEs)">{% if record %}{{record.data.additional_comments}}{% endif %}</textarea>
+                    		<textarea class="bigfield" name="additional_comments" placeholder="additional comments (will be shown on all course enquiries)">{% if record %}{{record.data.additional_comments}}{% endif %}</textarea>
                 		</td>
         	        </tr>
                 </tbody>

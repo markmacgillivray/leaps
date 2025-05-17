@@ -127,9 +127,9 @@ class Student(DomainObject):
         
         rec = {
             "qualifications": [],
-            "interests": [],
+            #"interests": [],
             "applications": [],
-            "experience": []
+            #"experience": []
         }
         if 'paequals' in self.data:
             rec['paequals'] = self.data['paequals']
@@ -196,6 +196,7 @@ class Student(DomainObject):
         for k,v in enumerate(request.form.getlist('interest_title')):
             if v is not None and len(v) > 0 and v != " ":
                 try:
+                    if not rec.get("interests",False): rec["interests"] = []
                     rec["interests"].append({
                         "title":v,
                         'brief_description': util.dewindows(request.form.getlist('interest_brief_description')[k])                        
@@ -296,6 +297,7 @@ class Student(DomainObject):
         for k,v in enumerate(request.form.getlist('experience_title')):
             if v is not None and len(v) > 0 and v != " ":
                 try:
+                    if not rec.get('experience',False): rec["experience"] = []
                     rec["experience"].append({
                         "title":v,
                         "date_from": request.form.getlist('experience_date_from')[k],

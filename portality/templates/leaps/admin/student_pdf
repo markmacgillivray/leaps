@@ -157,6 +157,7 @@
                 </td></tr>
             </table>
 
+            {% if record.interests and record.interests|length > 0 %}
             <h2>INTERESTS</h2>
             <table style="page-break-after:always">
                 <tr>
@@ -176,7 +177,9 @@
                 <tr><td style="width:30%;"><br /><br /><br /></td><td></td></tr>
                 {% endif %}
             </table> 
+            {% endif %}
 
+            {% if record.experience and record.experience|length > 0 %}
             <h2>WORK EXPERIENCE</h2>
             <table style="page-break-after:always">
                 <tr>
@@ -200,6 +203,7 @@
                 <tr><td style="width:30%;"><br /><br /><br /></td><td></td></tr>
                 {% endif %}
             </table> 
+            {% endif %}
 
             <h2>THIRD / FOURTH YEAR QUALIFICATIONS</h2>
             <table>
@@ -277,7 +281,7 @@
             <h2>POTENTIAL APPLICATIONS</h2>
             <table style="page-break-after:always">
                 <tr>
-                    <th style="width:20%;">Institution</th><th style="width:20%;">Subject</th><th style="width:10%;">Level</th><th style="width:10%;">Course code</th><th style="width:30%;">Qualifications required</th><th style="width:10%;">PAE</th>
+                    <th style="width:20%;">Institution</th><th style="width:20%;">Subject</th><th style="width:10%;">Level</th><th style="width:10%;">Course code</th><th style="width:30%;">Qualifications required</th><th style="width:10%;">Course enquiry</th>
                 </tr>
                 {% for record in record.applications %}
                     <tr><td>{{ record.institution }}</td><td>{{ record.subject }}</td><td>{{ record.level }}</td><td>{{ record.course_code }}</td><td></td><td></td></tr>
@@ -350,7 +354,7 @@
                 </tr>
                 {% if record.pae_action %}
                 <tr>
-                    <td style="width:30%;">PAE action</td>
+                    <td style="width:30%;">Course enquiry action</td>
                     <td>{% if record.pae_action %}{% if record.pae_action %}Yes{% else %}No{% endif %}{% else %}Yes/No{% endif %}</td>
                 </tr>
                 {% endif %}

@@ -86,7 +86,7 @@ jQuery(document).ready(function() {
                             To be confirmed - check back later
                         {% elif student.status in ["not_eligible_interviewed","not_eligible_not_interviewed","not_applying_not_interviewed"] %}
                             Not LEAPS eligible
-                        {% elif student.status in ["not_applying_interviewed","paes_requested","paes_in_progress","paes_complete","complete"] %}
+                        {% elif student.status in ["not_applying_interviewed","course_enquiries_requested","course_enquiries_in_progress","course_enquiries_complete","complete"] %}
                             LEAPS eligible
                         {% else %}
                             Unknown - check with LEAPS staff

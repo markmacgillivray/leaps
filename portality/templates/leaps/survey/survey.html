@@ -160,6 +160,7 @@ jQuery(document).ready(function() {
 
     var addrow = function(event) {
         event.preventDefault();
+				$('#quals_warning').hide();
         var maxrows = 6;
         $(this).closest('.row').hasClass('manyrows') ? maxrows = 30 : false;
         $(this).closest('.row').siblings('.row').length == (maxrows - 1) ? $(this).hide() : false;
@@ -177,16 +178,35 @@ jQuery(document).ready(function() {
     $('.add-row').bind('click',addrow);
     var deleterow = function(event) {
         event.preventDefault();
+				$('#quals_warning').hide();
         var parent = $(this).closest('.row').parent();
         $(this).closest('.row').remove();
     }
     $('.delete-row').bind('click',deleterow);
 
     var triggersave = function(event) {
-        if ( !$('#survey').parsley('validate') ) {
-            event.preventDefault(); // this also focuses the first wrong element
-        }
-    };
+				$('#quals_warning').hide();
+				var validated = true;
+				if ( !$('#survey').parsley('validate') ) {
+						validated = false;
+						event.preventDefault(); // this also focuses the first wrong element
+				}
+				var quals_count = 0;
+				var quals_blank = 0;
+				$('.qualificationlevels').each(function() {
+						quals_count++;
+						if (!$(this).val()) quals_blank++;
+				});
+				if (quals_count == quals_blank && quals_count > 1) {
+						event.preventDefault();
+						$('#quals_warning').show();
+						if (validated) {
+								$('html, body').animate({
+										scrollTop: $('#quals_warning').offset().top - 100
+								}, 500);
+						}
+				}
+			};
     $('#triggersave').bind('click',triggersave);
     
     var subjectslist = {};
@@ -253,30 +273,30 @@ jQuery(document).ready(function() {
     $('.institutionselector').bind('change',limitsubjects);
     $('.subjectselector').bind('change',limitlevels);
     
-	var allgrades = ''
+		var allgrades = ''
     var limitqualifications = function(event) {
-		var yr = $(this).val();
-		var qs = $(this).closest('.row').find('.qualificationgrades').last();
-		if (yr == 'Sixth year') {
-			if (allgrades === '') allgrades = qs.html();
-			qs.html('<option value="" disabled="disabled" selected="selected">select Grade</option><option value="Currently sitting">Currently sitting</option><option value="Resit">Resit</option>');
-		} else if (allgrades) {
-			qs.html(allgrades);
-		}
+			var yr = $(this).val();
+			var qs = $(this).closest('.row').find('.qualificationgrades').last();
+			if (yr == 'Sixth year') {
+				if (allgrades === '') allgrades = qs.html();
+				qs.html('<option value="" disabled="disabled" selected="selected">select Grade</option><option value="Currently sitting">Currently sitting</option><option value="Resit">Resit</option>');
+			} else if (allgrades) {
+				qs.html(allgrades);
+			}
     }
     $('.qualificationselector').bind('change',limitqualifications);
 
 
 	// auto-add four rows each for fourth fifth and sixth year to quals section
-	for (var i = 0; i < 11; i++) {
+	for (var i = 0; i < 14; i++) {
 		$('.manyrows').last().find('.add-row').trigger('click');
 	}
 	$('.qualificationselector').each(function (i) {
-		var yr = i < 4 ? 'Fourth' : i < 8 ? 'Fifth' : 'Sixth'
+		var yr = i < 6 ? 'Fourth' : i < 11 ? 'Fifth' : 'Sixth'
 		var oh = $(this).html();
 		oh = oh.replace(' selected="selected"', '').replace('"' + yr + ' year"', '"' + yr + ' year" selected="selected"');
 		$(this).html(oh);
-		if (i > 7) $(this).trigger('change');
+		if (i > 10) $(this).trigger('change');
 	});
 	$('.qualificationselector').first().val('Fourth year');
 
@@ -362,8 +382,8 @@ p.pregrey > span > span > span > span.select2-selection__rendered {
 	    <div class="col-sm-12">
 	        <p>You must complete all of the seven parts below. 
 	        It should take no more than 30 minutes to complete, if you prepare in advance.
-          Please have details of your qualifications, personal 
-	        interests, work experience, and possible University or College applications to hand before you start.
+          Please have details of your qualifications <!--, personal interests, work experience, -->
+					and possible University or College applications to hand before you start.
 	        You will also be asked about your eligibility - please view our 
 	        <a target="_blank" href="https://leapsonline.org/node/1602">What is LEAPS?</a> presentation to learn more.
 	        You can find out how we use and what we do with your personal data <a target="_blank" href="/policy">here</a>.</p>
@@ -623,12 +643,25 @@ p.pregrey > span > span > span > span.select2-selection__rendered {
 	    <div class="col-sm-12">
 	        <div class="well">
 	            <h2>2. Qualifications and currently sitting</h2>
-	            <p>Please input details of all qualifications 
+	            <!--<p>Please input details of all qualifications 
 	            you have (or are studying for current year) for each year of school. 
 	            Please include any qualifications you sat but did not pass. If you do not yet know your grade, 
 	            select Unknown in the Grade field. If you have any qualifications that do not meet the criteria 
-	            below, you will have the option to describe them later.</p>
-	        </div>
+	            below, you will have the option to describe them later.</p>-->
+
+							<p>Please input details of all qualifications you have 
+								(or are studying in the current year) for each year of school. 
+								Input any qualifications you sat but did not pass. The system will not allow you to bypass this section.   
+								If you do not know your grade yet, select "unknown" in the grade column.  
+								If you want to enter more qualifications for any year, use the "add" button to add extra rows. 
+								If you have no qualifications to enter, use the "delete" buttons to remove all the blank rows.
+								If you have any qualifications that do not meet the criteria below, you will have the option to add them later.</p>
+
+							<p id="quals_warning" style="display: none; background-color: #F2DEDE; color: #B94A48; border: 1px solid #EED3D7;">
+								Note: you must provide details of all qualifications you are currently studying for, or else remove all but one of the blank rows.
+							</p>
+
+						</div>
 	    </div>
 	</div>
 	
@@ -742,6 +775,7 @@ p.pregrey > span > span > span > span.select2-selection__rendered {
         
 
 <!-- the interests page -->
+<!--
 <div class="part interests">
 
 	<div class="row">
@@ -759,12 +793,12 @@ p.pregrey > span > span > span > span.select2-selection__rendered {
 	</div>
 
 	<div class="row multi">
-	    <!--<div class="col-sm-4">
+	--><!--<div class="col-sm-4">
             <p>Title</p>
     		<p><input class="form-control" type="text" name="interest_title"></p>
-    	</div>-->
+    	</div>--><!--
 	    <div class="col-sm-9">
-		    <!-- add data-required="true" to the following textarea to actually make the maxwords take effect -->
+			--><!-- add data-required="true" to the following textarea to actually make the maxwords take effect --><!--
     		<p><textarea class="form-control" name="interest_brief_description" data-maxwords="200" data-trigger="keyup focusout change"></textarea></p>
     	</div>
 	    <div class="col-sm-3">
@@ -774,7 +808,7 @@ p.pregrey > span > span > span > span.select2-selection__rendered {
 	</div>
 
 </div>
-
+-->
 
 
 
@@ -784,6 +818,7 @@ p.pregrey > span > span > span > span.select2-selection__rendered {
 
 
 <!-- the experience page -->
+<!--
 <div class="part experience">
 
 	<div class="row">
@@ -802,7 +837,7 @@ p.pregrey > span > span > span > span.select2-selection__rendered {
 
 	<div class="row multi">
 	    <div class="col-sm-6">
-		    <!-- add data-required="true" to the following textarea to actually make the maxwords take effect -->
+			--><!-- add data-required="true" to the following textarea to actually make the maxwords take effect --><!--
     		<p><textarea class="form-control" name="experience_brief_description" data-maxwords="200" data-trigger="keyup focusout change"></textarea></p>
     	</div>
 	    <div class="col-sm-3">
@@ -818,7 +853,7 @@ p.pregrey > span > span > span > span.select2-selection__rendered {
 	</div>
 
 </div>
-
+-->
 
 
 
@@ -856,10 +891,12 @@ p.pregrey > span > span > span > span.select2-selection__rendered {
 
 	<div class="row">
 	    <div class="col-sm-4">
-            <p>If you feel your academic performance has been affected at any time in school, 
+            <!--<p>If you feel your academic performance has been affected at any time in school, 
 			please tell us about it here e.g. a period of absence from school, time spent in care, estrangement, 
 			health issues, caring responsibilities, bereavement. (At your 
-			LEAPS interview, we may discuss if this would be relevant to share with university admissions tutors.)</p>
+			LEAPS interview, we may discuss if this would be relevant to share with university admissions tutors.)</p>-->
+					<p>Have there been any issues that have negatively impacted your school performance e.g. mental health or bereavement. 
+						We can discuss this if it would be relevant to share with universities/colleges.</p>
 	    </div>
 	    <div class="col-sm-8">
             <p><textarea class="form-control" name="issues_affecting_performance"></textarea></p>
@@ -868,7 +905,8 @@ p.pregrey > span > span > span > span.select2-selection__rendered {
 
 	<div class="row">
 	    <div class="col-sm-4">
-            <p>Do you have any particular queries or concerns that you would like covered at your LEAPS Interview?</p>
+            <!--<p>Do you have any particular queries or concerns that you would like covered at your LEAPS Interview?</p>-->
+						<p>Is there anything you think would be important for our interviewer to be aware of prior to your interview?</p>
 	    </div>
 	    <div class="col-sm-8">
             <p><textarea class="form-control" name="particular_queries"></textarea></p>
