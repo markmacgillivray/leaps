@@ -27,7 +27,7 @@
     var getSchools = function() {
       $.ajax({
         url: 'https://leapssurvey.org/query/school/_search?size=100&q=NOT%20name:TEST%20AND%20leaps_category:"1+"',
-        type: 'POST',
+        type: 'GET',
         dataType: 'JSONP',
         success: function(data) {
           var list = [];
