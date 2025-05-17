@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<script>
+	jQuery(document).ready(function() {
+
+		$('#eligibility_yes').click(function() {
+			$('.sections').hide();
+			$('#criteria_check').show();
+		});
+
+		$('#eligibility_no').click(function() {
+			$('.sections').hide();
+			$('#ineligible_one').show();
+		});
+
+		$('input[name="criteria"]').click(function() {
+			$('.sections').hide();
+			if ($(this).val() == 'none') {
+				$('#postcode_check').show();
+			} else {
+				$('#eligible').show();
+			}
+		});
+
+    var getSchools = function() {
+      $.ajax({
+        url: 'https://leapssurvey.org/query/school/_search?size=100&q=NOT%20name:TEST%20AND%20leaps_category:"1+"',
+        type: 'POST',
+        dataType: 'JSONP',
+        success: function(data) {
+          var list = [];
+          for ( var h in data.hits.hits ) list.push(data.hits.hits[h]._source.name);
+          list.sort();
+          var opts = '<option></option>';
+          for ( var l in list ) opts += '<option>' + list[l] + '</option>';
+          $('#leaps_pc_school').html(opts);
+        }
+      });
+    }
+    getSchools();
+
+    $('#leaps_pc_school').bind('change', function(e) {
+			$('.sections').hide();
+			$('#eligible').show();
+    });
+
+    var lookup = function(e) {
+			$.ajax({
+				url: 'https://leapssurvey.org/query/simd/_search' + '?sort=post_code&q=id:' + $('#leaps_pc_lookup').val().toLowerCase().replace(/ /g,'') + '*',
+				type: 'POST',
+				dataType: 'JSONP',
+				success: function(data) {
+					$('.sections').hide();
+					var rec = data.hits.hits.length ? data.hits.hits[0]._source : {};
+					if (rec.simd_decile && parseInt(rec.simd_decile) <= 2) {
+						$('#eligible').show();
+					} else {
+						$('#ineligible_two').show();
+					}
+				},
+				error: function(data) {
+					$('.sections').hide();
+					$('#ineligible_two').show();
+				}
+			});
+    }
+    $('#leaps_pc_lookup_trigger').bind('click',lookup);
+
+});
+</script>
+
+		<div id="logo">
+	    	<img src="/static/leaps_banner.png" alt="A group of students from the Lothians Equal Access Programme for Schools" title="A group of students from the Lothians Equal Access Programme for Schools" />
+		</div>
+
+		<div class="row-fluid">
+		    <div class="span12">
+						
+						<h3>Eligibility</h3>
+
+						<div id="eligibility_start" class="sections">
+							<p>Will you be able to achieve 3 Highers by the end of S6? (Highers CAN include the LEAPS
+								Transitions Course and full 12 credit Level 6 Foundation Apprenticeships but CANNOT include Level 6
+								NPAs, Level 6 College courses or OU YASS courses)</p>
+
+							<p>
+								<input type="radio" name="eligibility" value="yes" id="eligibility_yes" /> Yes
+							</p>
+							<p>
+								<input type="radio" name="eligibility" value="no" id="eligibility_no" /> No
+							</p>
+						</div>
+						
+						<div id="criteria_check" class="sections" style="display:none;">
+							<p>Please check any of the following criteria that applies to you:</p>
+
+							<p><input type="radio" name="criteria" value="first" id="criteria_first" />
+								Student who is first generation in family to apply to higher education (this includes students
+whose parents do not already have a degree and students whose parents may have briefly
+participated in higher education but did not achieve a degree.)</p>
+
+							<p><input type="radio" name="criteria" value="income" id="criteria_income" />
+								Student from a low income background (for instance where a student is entitled to EMA, free
+meals in school, or where the family is entitled to a benefit such as Universal Credit)</p>
+
+							<p><input type="radio" name="criteria" value="carer" id="criteria_carer" />
+								Young carer (Anyone who provides unpaid care, for a friend, partner or family member, who
+due to illness, frailty, disability, a mental health problem or an addiction cannot cope without their support.)</p>
+
+							<p><input type="radio" name="criteria" value="care" id="criteria_care" />
+								Care experienced (any student who has been, or is currently, in care.)</p>
+
+							<p><input type="radio" name="criteria" value="estranged" id="criteria_estranged" />
+								Are you estranged from both your parents? (a young person who currently has little or no
+contact with either of their parents and/or their legal guardian)</p>
+
+							<p><input type="radio" name="criteria" value="none" id="criteria_none" />
+								None of the above</p>
+
+						</div>
+
+						<div id="postcode_check" class="sections" style="display:none;">
+							<p>Please select your school name if it is one of those listed: <select id="leaps_pc_school"></select></p>
+							
+							<p>Or else check your post code here:</p>
+							<p><input id="leaps_pc_lookup" placeholder="Enter your post code" type="text" />
+							<button id="leaps_pc_lookup_trigger" style="height: 27px; margin-top: -9px;">Check</button></p>
+						</div>
+
+						<div id="eligible" style="display:none;">
+							<p>You are eligible to apply for LEAPS support.</p>
+							<p><a href="/survey/student">Click here to continue to the application survey</a>.</p>
+						</div>
+
+						<div id="ineligible_one" style="display:none;">
+							<p>We are sorry but you wouldn't be eligible for LEAPS support
+								at this time. Make sure you get in touch with your guidance teacher or school careers adviser to
+								discuss your next steps. You can find details here: <br>
+								<a href="https://www.skillsdevelopmentscotland.co.uk/what-we-do/scotlands-careers-services/our-careers-service-in-schools">Our careers service in schools - Skills Development Scotland</a>
+							</p>
+						</div>
+
+						<div id="ineligible_two" style="display:none;">
+							<p>You are not eligible to receive support from LEAPS at this time. If you want to get in touch with us
+								to discuss this then please email leaps@ed.ac.uk
+							</p>
+							<p>
+								To receive help with your university and college applications you can contact your guidance teacher
+								and your school careers adviser (LINK). Additionally, universities and colleges have enquiry teams
+								who you can email for answers to any of your questions. They will be happy to help you. You
+								should also visit your local Higher Education Convention, usually in the Autumn term, where you can
+								meet representatives of different universities and colleges find out lots of information:<br>
+								<a href="https://www.ucas.com/providers/events-calendar-2025">
+									Events Calendar 2025 | Business, Virtual and digital, Undergraduate, Conservatoires, Apprenticeships, 16-18
+								Choices | UCAS</a>
+							</p>
+							<p>
+								Attending University Open Days is also a good way to plan your next steps. You'll find details of these
+								on universities websites.<br>
+								<a href="https://www.heloa.ac.uk/wp-content/uploads/HELOA-Scotland-Open-Days-2025.pdf">University Open Days listing.</a>
+							</p>
+						</div>
+
+				</div>
+		</div>
+
+{% endblock %}
+
