@@ -625,7 +625,7 @@ fieldset{
                     <tr>
 	                    <td style="text-align:right;padding:6px 10px 0 0;">Status</td>
                 		<td><select id="status" name="status">
-                		    {% if record %}{% if record.data.status not in ["new", "not_eligible_interviewed", "not_eligible_not_interviewed", "not_applying_interviewed", "not_applying_not_interviewed", "allocated_to_interviewer", "awaiting_interview", "awaiting_phone_interview", "awaiting_phone_check", "interviewed", "absent", "query", "course_enquries_requested", "course_enquiries_in_progress", "course_enquiries_complete", "complete_interviewed", "complete_phone_check"] %}<option style="color:red;" selected="selected">{{record.data.status}}</option>{% endif %}{% endif %}
+                		    {% if record %}{% if record.data.status not in ["new", "not_eligible_interviewed", "not_eligible_not_interviewed", "not_applying_interviewed", "not_applying_not_interviewed", "allocated_to_interviewer", "awaiting_interview", "awaiting_phone_interview", "missed_phone_interview", "interviewed", "absent", "query", "course_enquries_requested", "course_enquiries_in_progress", "course_enquiries_complete", "complete_interviewed", "complete_phone_check"] %}<option style="color:red;" selected="selected">{{record.data.status}}</option>{% endif %}{% endif %}
                 		    <option>new</option>
               		        <option{% if record %}{% if record.data.status == "not_eligible_interviewed" %} selected="selected"{% endif %}{% endif %}>not_eligible_interviewed</option>
               		        <option{% if record %}{% if record.data.status == "not_eligible_not_interviewed" %} selected="selected"{% endif %}{% endif %}>not_eligible_not_interviewed</option>
@@ -634,7 +634,8 @@ fieldset{
               		        <option{% if record %}{% if record.data.status == "allocated_to_interviewer" %} selected="selected"{% endif %}{% endif %}>allocated_to_interviewer</option>
               		        <option{% if record %}{% if record.data.status == "awaiting_interview" %} selected="selected"{% endif %}{% endif %}>awaiting_interview</option>
               		        <option{% if record %}{% if record.data.status == "awaiting_phone_interview" %} selected="selected"{% endif %}{% endif %}>awaiting_phone_interview</option>
-              		        <option{% if record %}{% if record.data.status == "awaiting_phone_check" %} selected="selected"{% endif %}{% endif %}>awaiting_phone_check</option>
+              		        <option{% if record %}{% if record.data.status == "missed_phone_interview" %} selected="selected"{% endif %}{% endif %}>missed_phone_interview</option>
+              		        <!--<option{% if record %}{% if record.data.status == "awaiting_phone_check" %} selected="selected"{% endif %}{% endif %}>awaiting_phone_check</option>-->
               		        <option{% if record %}{% if record.data.status == "interviewed" %} selected="selected"{% endif %}{% endif %}>interviewed</option>
               		        <option{% if record %}{% if record.data.status == "absent" %} selected="selected"{% endif %}{% endif %}>absent</option>
               		        <option{% if record %}{% if record.data.status == "query" %} selected="selected"{% endif %}{% endif %}>query</option>

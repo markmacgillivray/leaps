@@ -21,7 +21,7 @@
             <select id="assignstatus" style="display: none;">
                 <option></option>
             <!-- ["new", "not_eligible_interviewed", "not_eligible_not_interviewed", "not_applying_interviewed", "not_applying_not_interviewed", "allocated_to_interviewer", "awaiting_interview", "interviewed", "absent", "query", "paes_requested", "paes_in_progress", "paes_complete", "complete"] -->
-            {% for name in ["new", "not_eligible_interviewed", "not_eligible_not_interviewed", "not_applying_interviewed", "not_applying_not_interviewed", "allocated_to_interviewer", "awaiting_interview", "awaiting_phone_interview", "awaiting_phone_check", "interviewed", "absent", "query", "course_enquries_requested", "course_enquiries_in_progress", "course_enquiries_complete", "complete_interviewed", "complete_phone_check"] %}
+            {% for name in ["new", "not_eligible_interviewed", "not_eligible_not_interviewed", "not_applying_interviewed", "not_applying_not_interviewed", "allocated_to_interviewer", "awaiting_interview", "awaiting_phone_interview", "missed_phone_interview", "interviewed", "absent", "query", "course_enquries_requested", "course_enquiries_in_progress", "course_enquiries_complete", "complete_interviewed", "complete_phone_check"] %}
             <option>{{ name }}</option>
             {% endfor %}
             </select>

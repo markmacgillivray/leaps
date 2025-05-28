@@ -131,7 +131,9 @@
                         Please watch our helpful video for more information 
                         <a href="https://leapsonline.org/schoolstudents/blogs/how-identify-yourself-care-experienced-your-ucas-application#:~:text=1%20Log%20in%20to%20your%20UCAS%20HUB%20and,option%20that%20best%20applies%20to%20you%20More%20items">How to Identify Yourself as Care Experienced on your UCAS Application | LeapsOnline</a>
                         and visit UCAS 
-                        <a href="https://www.ucas.com/applying/applying-university/individual-needs/care-experienced-students#the-ucas-application-%E2%80%93-sharing-your-circumstances">https://www.ucas.com/applying/applying-university/individual-needs/care-experienced-students#the-ucas-application-%E2%80%93-sharing-your-circumstances</a>
+                        <a href="https://www.ucas.com/applying/applying-university/individual-needs/care-experienced-students#the-ucas-application-%E2%80%93-sharing-your-circumstances">https://www.ucas.com/applying/applying-university/individual-needs/care-experienced-students#the-ucas-application-%E2%80%93-sharing-your-circumstances</a>. 
+                        More information available at: 
+                        <a href="https://leapsonline.org/schoolstudents/care-experienced-students">https://leapsonline.org/schoolstudents/care-experienced-students</a>.
                     </p>
                 </td>
             </tr>
@@ -221,7 +223,7 @@
                     </ul>
 
                     <p>For more information, follow our guide which shows you how to identify yourself as a LEAPS Transitions 
-                        Course student on your UCAS application at www.leapsonline.org/leaps-ucas</p>
+                        Course student on your UCAS application at <a href="https://www.leapsonline.org/leaps-ucas-application">www.leapsonline.org/leaps-ucas-application</a>.</p>
                     {% endif %}
                 </td>
             </tr>

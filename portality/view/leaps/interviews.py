@@ -117,12 +117,10 @@ def interviewForm(sid):
     elif request.form.get('submit_reference_notes', False):
         if not student.data.get('interview',False): student.data['interview'] = {}
         student.data['interview']['pre_interview_notes'] = request.form['pre_interview_notes']
-        #student.data['pre_interview_notes'] = request.form['pre_interview_notes']
         student.save()
         flash('The pre-interview notes have been saved.', 'success')
         return render_template('leaps/interviews/form.html', student=student, selections=selections)
     elif request.form.get('submit_checker_notes', False):
-        #if student.data.get('interview',False):
         if student.data.get('interview',{}).get('status',False):
             student.data['interview']['leaps_admin_notes'] = request.form['leaps_admin_notes']
             student.save()
@@ -164,11 +162,13 @@ def interviewForm(sid):
                     val = True
                 elif val == "no" or val == "off":
                     val = False
-                student.data['interview'][field] = val
-                if field == 'update_email' and request.form[field] != student.data.get('email',False):
-                    student.data['email'] = request.form[field]
-                if field == 'update_mobile' and request.form[field] != student.data.get('mobile_phone',False):
-                    student.data['mobile_phone'] = request.form[field]
+                if field in ['update_email', 'update_mobile']:
+                    wf = 'email' if field == 'update_email' else 'mobile_phone'
+                    if val != student.data.get(wf,False):
+                        student.data[wf] = val
+                        student.data['interview'][field] = val
+                else:
+                    student.data['interview'][field] = val
             elif field in ['submit_and_complete'] and not student.data['interview'].get('completed_date', False):
                 student.data['interview']['completed_date'] = datetime.now().strftime("%d/%m/%Y")
                 student.data['interview']['status'] = 'complete'

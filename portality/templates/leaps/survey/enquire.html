@@ -15,10 +15,15 @@
 			$('#ineligible_one').show();
 		});
 
+		$('#school_not_listed').click(function() {
+			$('.sections').hide();
+			$('#ineligible_two').show();
+		});
+
 		$('input[name="criteria"]').click(function() {
 			$('.sections').hide();
 			if ($(this).val() == 'none') {
-				$('#postcode_check').show();
+				$('#school_check').show();
 			} else {
 				$('#eligible').show();
 			}
@@ -43,7 +48,7 @@
 
     $('#leaps_pc_school').bind('change', function(e) {
 			$('.sections').hide();
-			$('#eligible').show();
+			$('#postcode_check').show();
     });
 
     var lookup = function(e) {
@@ -55,6 +60,7 @@
 					$('.sections').hide();
 					var rec = data.hits.hits.length ? data.hits.hits[0]._source : {};
 					if (rec.simd_decile && parseInt(rec.simd_decile) <= 2) {
+						$('#eligible_simd_info').html('Your postcode ' + $('#leaps_pc_lookup').val() + ' is classed as Decile ' + rec.simd_decile + '. Decile 1 or 2 postcodes are classed as SIMD20 based on the Scottish Government Scottish Index of Multiple Deprivation Data. This, along with the school you attend, makes you eligible for LEAPS support.');
 						$('#eligible').show();
 					} else {
 						$('#ineligible_two').show();
@@ -121,16 +127,20 @@ contact with either of their parents and/or their legal guardian)</p>
 
 						</div>
 
+						<div id="school_check" class="sections" style="display:none;">
+							<p>Please select your school name if it is one of those listed:</p>
+							<p><select id="leaps_pc_school"></select></p>
+							<p><button id="school_not_listed" style="height: 27px;">My school is not listed</button></p>
+						</div>
+
 						<div id="postcode_check" class="sections" style="display:none;">
-							<p>Please select your school name if it is one of those listed: <select id="leaps_pc_school"></select></p>
-							
-							<p>Or else check your post code here:</p>
+							<p>Please else check your post code here:</p>
 							<p><input id="leaps_pc_lookup" placeholder="Enter your post code" type="text" />
 							<button id="leaps_pc_lookup_trigger" style="height: 27px; margin-top: -9px;">Check</button></p>
 						</div>
 
 						<div id="eligible" style="display:none;">
-							<p>You are eligible to apply for LEAPS support.</p>
+							<p id="eligible_simd_info">You are eligible to apply for LEAPS support based on the criteria you selected.</p>
 							<p><a href="/survey/student">Click here to continue to the application survey</a>.</p>
 						</div>
 
