@@ -20,12 +20,13 @@
 			$('#ineligible_two').show();
 		});
 
-		$('input[name="criteria"]').click(function() {
+		$('#check_criteria').click(function() {
+			console.log($('input[name="criteria"]:checked').length);
 			$('.sections').hide();
-			if ($(this).val() == 'none') {
-				$('#school_check').show();
-			} else {
+			if ($('input[name="criteria"]:checked').length && !$('input[value="none"]:checked').length && (!$('input[value="simd"]:checked').length || $('input[name="criteria"]:checked').length > 1)) {
 				$('#eligible').show();
+			} else {
+				$('#postcode_check').show();
 			}
 		});
 
@@ -100,41 +101,58 @@
 						</div>
 						
 						<div id="criteria_check" class="sections" style="display:none;">
-							<p>Please check any of the following criteria that applies to you:</p>
+							<p>Please check the following criteria and select all options that apply to you:</p>
 
-							<p><input type="radio" name="criteria" value="first" id="criteria_first" />
+							<p><input type="checkbox" name="criteria" value="school" id="criteria_school" />
+								I attend a LEAPS Group 1+ or Group 1 school (Alloa, Bannockburn, Castlebrae, Craigroyston, Drummond, Eyemouth, Forrester,
+								Gracemount, Hawick, Liberton, Lornshill, Newbattle, Preston Lodge, Ross, Tynecastle, Wester Hailes)</p>
+
+							<p><input type="checkbox" name="criteria" value="first" id="criteria_first" />
 								Student who is first generation in family to apply to higher education (this includes students
 whose parents do not already have a degree and students whose parents may have briefly
 participated in higher education but did not achieve a degree.)</p>
 
-							<p><input type="radio" name="criteria" value="income" id="criteria_income" />
+							<p><input type="checkbox" name="criteria" value="income" id="criteria_income" />
 								Student from a low income background (for instance where a student is entitled to EMA, free
 meals in school, or where the family is entitled to a benefit such as Universal Credit)</p>
 
-							<p><input type="radio" name="criteria" value="carer" id="criteria_carer" />
+							<p><input type="checkbox" name="criteria" value="carer" id="criteria_carer" />
 								Young carer (Anyone who provides unpaid care, for a friend, partner or family member, who
 due to illness, frailty, disability, a mental health problem or an addiction cannot cope without their support.)</p>
 
-							<p><input type="radio" name="criteria" value="care" id="criteria_care" />
+							<p><input type="checkbox" name="criteria" value="care" id="criteria_care" />
 								Care experienced (any student who has been, or is currently, in care.)</p>
 
-							<p><input type="radio" name="criteria" value="estranged" id="criteria_estranged" />
+							<p><input type="checkbox" name="criteria" value="estranged" id="criteria_estranged" />
 								Are you estranged from both your parents? (a young person who currently has little or no
 contact with either of their parents and/or their legal guardian)</p>
 
-							<p><input type="radio" name="criteria" value="none" id="criteria_none" />
-								None of the above</p>
+							<p><input type="checkbox" name="criteria" value="simd" id="criteria_simd" />
+								Student who lives in one of Scotland's 20% most disadvantaged communities as defined by the Scottish Index of Multiple
+								Deprivation (SIMD20). Please check your postcode on the next page.</p>
+
+							<p><input type="checkbox" name="criteria" value="none" id="criteria_none" />
+								None of the above but I'd like to check my post code please.</p>
+
+							<p><button id="check_criteria">Check your eligibility</button></p></p>
 
 						</div>
 
-						<div id="school_check" class="sections" style="display:none;">
+						<!--<div id="school_check" class="sections" style="display:none;">
 							<p>Please select your school name if it is one of those listed:</p>
 							<p><select id="leaps_pc_school"></select></p>
 							<p><button id="school_not_listed" style="height: 27px;">My school is not listed</button></p>
-						</div>
+						</div>-->
 
 						<div id="postcode_check" class="sections" style="display:none;">
-							<p>Please else check your post code here:</p>
+							<p>This postcode tool uses information from the Scottish Government's Scottish Index of Multiple 
+								Deprivation postcode look-up file. Updates to SIMD are made by the Scottish Government. They may 
+								take place during the year and are outwith the control of LEAPS. The latest information can be 
+								found on the Scottish Government website here 
+								(<a href="https://www.gov.scot/collections/scottish-index-of-multiple-deprivation-2020/">https://www.gov.scot/collections/scottish-index-of-multiple-deprivation-2020/</a>). 
+								Please contact us with any queries at <a href="mailto:leaps@ed.ac.uk">leaps@ed.ac.uk</a>.
+							</p>
+
 							<p><input id="leaps_pc_lookup" placeholder="Enter your post code" type="text" />
 							<button id="leaps_pc_lookup_trigger" style="height: 27px; margin-top: -9px;">Check</button></p>
 						</div>
