@@ -9,8 +9,6 @@
 jQuery(document).ready(function() {
     
     $("[data-required]").attr('data-required-message',"");
-
-    // add a datepicker to all datepicker classes
     var opts = {
         inline: true,
         dateFormat: 'dd/mm/yy',
@@ -27,7 +25,6 @@ jQuery(document).ready(function() {
         maxDate: '-12y'
     };
     $('.dobdatepicker').datepicker(dobopts);
-    
     var dobformat = function(event) {
         event.preventDefault();
         var datestring = $('#date_of_birth').val();
@@ -41,7 +38,8 @@ jQuery(document).ready(function() {
         }
     }
     $('.checkdob').bind('change',dobformat);
-    var checkschool = function() {
+
+		var checkschool = function() {
         var school = $('#school').val().toLowerCase().replace(/[^a-z]/g,'');
         $('#can_claim_school').hide();
 		$('#can_claim_interviewed').hide();
@@ -55,7 +53,9 @@ jQuery(document).ready(function() {
             $('#claimed_group_school').attr("disabled", true);
         }
     }
-    var checksimd = function() {
+    $('.checkschool').bind('change',checkschool);
+
+		var checksimd = function() {
         var postcode = $('#post_code').val().toLowerCase().replace(/ /g,'');
         $.ajax({
             cache:false,
@@ -96,8 +96,8 @@ jQuery(document).ready(function() {
         }
     }
     $('.checkpostcode').bind('change',postcodeformat);
-    $('.checkschool').bind('change',checkschool);
-    var mobileformat = function(event) {
+
+		var mobileformat = function(event) {
         event.preventDefault();
         var str = $('#mobile_phone').val();
         if (str.length === 0) {
@@ -121,93 +121,75 @@ jQuery(document).ready(function() {
     }
     $('.checkmobile').bind('change',mobileformat);
 
+		$('#gender').bind('change',function(e) {
+			$('#gender_other').val('');
+			$('#show_gender_other').hide();
+			if ( $('#gender').val() == 'Other' ) $('#show_gender_other').show();
+		});
+
+		$('#claimed_estranged').bind('change', function() {
+			$('#more_estranged').hide();
+			if ( $('#claimed_estranged').is(':checked') ) $('#more_estranged').show();
+		});
+
+		$('#no_quals').bind('change', function() {
+			if ( $('#no_quals').is(':checked') ) {
+				$('#quals_warning').hide();
+				$('.qualification_subject, .qualification_level, .qualification_grade').each(function() {
+					$(this).val([]);
+					if ($(this).hasClass('select2this')) {
+						$(this).select2('destroy').removeAttr('id').removeAttr('data-select2-id');
+						$(this).select2();
+					}
+				});
+				$('.yearset').hide();
+			} else {
+				$('.yearset').show();
+			}
+		});
+
     $('.select2this').select2();
+
+		$('select').bind('change', function() { $(this).closest('.pregrey').removeClass('pregrey'); $(this).css({color: '#555'}); });
 
     var subjects = {{ selections.advancedsubjects|tojson|safe }};
 
-    // function of things to do whenever a row is appended
-    var preprow = function(row) {
-        $(row).find('.delete-row').bind('click',deleterow);
-        $(row).find('select').each(function() {
-            $(this).val("");
-            var opts = [];
-            $(this).find('option').each(function() {
-               opts.push({disabled: $(this).attr('disabled'), value: $(this).attr('value'), name: $(this).html()});
-            });
-            $(this).html("");
-            for ( var o in opts ) {
-                $(this).append('<option' + (opts[o].value !== undefined ? ' value="' + opts[o].value + '"' : '') + (opts[o].disabled ? ' disabled="disabled" selected="selected"' : '') + '>' + opts[o].name + '</option>');
-            }
-        });
-        $(row).find('input').val("");
-        $(row).find('textarea').html("").val("");
-        $(row).find('.datepicker').datepicker("destroy");
-        $(row).find('.datepicker').removeClass("hasDatepicker").removeAttr('id');
-        $(row).find('.datepicker').datepicker(opts);
-        var stext = '<option></option>';
-	    for ( var i = 0; i < subjects.length; i++ ) {
-	        stext += '<option>' + subjects[i] + '</option>';
-	    };
-        $(row).find('.subjectselector').html(stext);
-        $(row).find('.institutionselector').unbind('change',limitsubjects).bind('change',limitsubjects);
-        $(row).find('.subjectselector').unbind('change',limitlevels).bind('change',limitlevels);
-    }
-
-    // add / remove rows to list items
-    $('.row.multi').each(function() {
-        $(this).children().last().append('<p class="hidden-xs">&nbsp;</p><p style="display:none;"><a class="btn btn-block btn-warning delete-row" href="#">delete</a></p><p><a class="btn btn-block btn-success add-row" href="#">add</a></p>');
-    });
-
     var addrow = function(event) {
         event.preventDefault();
-				$('#quals_warning').hide();
-        var maxrows = 6;
-        $(this).closest('.row').hasClass('manyrows') ? maxrows = 30 : false;
-        $(this).closest('.row').siblings('.row').length == (maxrows - 1) ? $(this).hide() : false;
-        if ( $(this).closest('.row').siblings('.row').length < maxrows ) {
+				var prev = $(this).parent().siblings('.row').last();
+        if ( $(this).parent().siblings('.row').length < (prev.hasClass('manyrows') ? 10 : 6) ) {
             $('.select2this').select2('destroy').removeAttr('id').removeAttr('data-select2-id');
-            var row = $(this).closest('.row').clone(true).get(0);
-            $(this).closest('.row').append('<hr class="visible-xs visible-sm" style="border-color:#bbb;"></hr>');
-            preprow(row);
-            $(row).insertAfter($(this).closest('.row'));
-            $(this).closest('.row').find('.add-row').parent().hide();
-            $(this).closest('.row').find('.delete-row').parent().show();
+            var row = prev.clone(true).get(0);
+            prev.append('<hr class="visible-xs visible-sm" style="border-color:#bbb;"></hr>');
+						$(row).find('select').each(function() {
+								$(this).val("");
+								var opts = [];
+								$(this).find('option').each(function() {
+									opts.push({disabled: $(this).attr('disabled'), value: $(this).attr('value'), name: $(this).html()});
+								});
+								$(this).html("");
+								for ( var o in opts ) {
+										$(this).append('<option' + (opts[o].value !== undefined ? ' value="' + opts[o].value + '"' : '') + (opts[o].disabled ? ' disabled="disabled" selected="selected"' : '') + '>' + opts[o].name + '</option>');
+								}
+						});
+						$(row).find('input').not(':hidden').val("");
+						var stext = '<option></option>';
+						for ( var i = 0; i < subjects.length; i++ ) stext += '<option>' + subjects[i] + '</option>';
+						$(row).find('.subjectselector').html(stext);
+						$(row).find('.institutionselector').unbind('change',limitsubjects).bind('change',limitsubjects);
+						$(row).find('.subjectselector').unbind('change',limitlevels).bind('change',limitlevels);
+						$(row).insertAfter(prev);
             $('.select2this').select2();
         }
     }
     $('.add-row').bind('click',addrow);
-    var deleterow = function(event) {
-        event.preventDefault();
-				$('#quals_warning').hide();
-        var parent = $(this).closest('.row').parent();
-        $(this).closest('.row').remove();
-    }
-    $('.delete-row').bind('click',deleterow);
 
-    var triggersave = function(event) {
-				$('#quals_warning').hide();
-				var validated = true;
-				if ( !$('#survey').parsley('validate') ) {
-						validated = false;
-						event.preventDefault(); // this also focuses the first wrong element
-				}
-				var quals_count = 0;
-				var quals_blank = 0;
-				$('.qualificationlevels').each(function() {
-						quals_count++;
-						if (!$(this).val()) quals_blank++;
-				});
-				if (quals_count == quals_blank && quals_count > 1) {
-						event.preventDefault();
-						$('#quals_warning').show();
-						if (validated) {
-								$('html, body').animate({
-										scrollTop: $('#quals_warning').offset().top - 100
-								}, 500);
-						}
-				}
-			};
-    $('#triggersave').bind('click',triggersave);
+		// auto-add rows for fourth fifth and sixth year to quals section
+		$('.manyrows').each(function (i) {
+			for (var i = 0; i < ($(this).hasClass('fourthyear') ? 5 : $(this).hasClass('fifthyear') ? 4 : 3); i++) {
+				$(this).siblings().last().find('.add-row').trigger('click');
+			}
+		});
     
     var subjectslist = {};
     try {
@@ -272,53 +254,40 @@ jQuery(document).ready(function() {
     }
     $('.institutionselector').bind('change',limitsubjects);
     $('.subjectselector').bind('change',limitlevels);
-    
-		var allgrades = ''
-    var limitqualifications = function(event) {
-			var yr = $(this).val();
-			var qs = $(this).closest('.row').find('.qualificationgrades').last();
-			if (yr == 'Sixth year') {
-				if (allgrades === '') allgrades = qs.html();
-				qs.html('<option value="" disabled="disabled" selected="selected">select Grade</option><option value="Currently sitting">Currently sitting</option><option value="Resit">Resit</option>');
-			} else if (allgrades) {
-				qs.html(allgrades);
-			}
-    }
-    $('.qualificationselector').bind('change',limitqualifications);
 
+		
+    var triggersave = function(event) {
+				$('#quals_warning').hide();
+				var validated = true;
+				if ( !$('#survey').parsley('validate') ) {
+						validated = false;
+						event.preventDefault(); // this also focuses the first wrong element
+				}
+				var fourth_quals_count = 0;
+				var fifth_quals_count = 0
+				$('.qualificationlevels').each(function() {
+						if ($(this).val() && $(this).closest('.row').hasClass('fourthyear')) fourth_quals_count++;
+						if ($(this).val() && $(this).closest('.row').hasClass('fifthyear')) fifth_quals_count++;
+				});
+				if ((fourth_quals_count < 6 || fifth_quals_count < 5) && !$('#no_quals').is(':checked')) {
+						event.preventDefault();
+						$('#quals_warning').show();
+						if (validated) {
+								$('html, body').animate({
+										scrollTop: $('#quals_warning').offset().top - 100
+								}, 500);
+						}
+				}
+			};
+    $('#triggersave').bind('click',triggersave);
 
-	// auto-add four rows each for fourth fifth and sixth year to quals section
-	for (var i = 0; i < 14; i++) {
-		$('.manyrows').last().find('.add-row').trigger('click');
-	}
-	$('.qualificationselector').each(function (i) {
-		var yr = i < 6 ? 'Fourth' : i < 11 ? 'Fifth' : 'Sixth'
-		var oh = $(this).html();
-		oh = oh.replace(' selected="selected"', '').replace('"' + yr + ' year"', '"' + yr + ' year" selected="selected"');
-		$(this).html(oh);
-		if (i > 10) $(this).trigger('change');
-	});
-	$('.qualificationselector').first().val('Fourth year');
-
-	function checkKeys(e){
-		 e = e || event;
-		 var txtArea = /textarea/i.test((e.target || e.srcElement).tagName);
-		 return txtArea || ( (e.keyCode || e.which || e.charCode || 0) !== 13 && (e.keyCode || e.which || e.charCode || 0) !== 8 && e.type !== 'text');
-	}
-	document.querySelector('form').onkeypress = checkKeys;
+		function checkKeys(e){
+			e = e || event;
+			var txtArea = /textarea/i.test((e.target || e.srcElement).tagName);
+			return txtArea || ( (e.keyCode || e.which || e.charCode || 0) !== 13 && (e.keyCode || e.which || e.charCode || 0) !== 8 && e.type !== 'text');
+		}
+		document.querySelector('form').onkeypress = checkKeys;
 	
-	$('#gender').bind('change',function(e) {
-	   $('#gender_other').val('');
-	   $('#show_gender_other').hide();
-	   if ( $('#gender').val() == 'Other' ) $('#show_gender_other').show();
-	});
-	
-	$('select').bind('change', function() { $(this).closest('.pregrey').removeClass('pregrey'); $(this).css({color: '#555'}); });
-
-	$('#claimed_estranged').bind('change', function() {
-	   $('#more_estranged').hide();
-	   if ( $('#claimed_estranged').is(':checked') ) $('#more_estranged').show();
-	});
 });
 </script>
 
@@ -382,7 +351,7 @@ p.pregrey > span > span > span > span.select2-selection__rendered {
 	    <div class="col-sm-12">
 	        <p>You must complete all of the five parts below. 
 	        It should take no more than 30 minutes to complete, if you prepare in advance.
-          Please have details of your qualifications <!--, personal interests, work experience, -->
+          Please have details of your qualifications
 					and possible University or College applications to hand before you start.
 	        You will also be asked about your eligibility - please view our 
 	        <a target="_blank" href="https://leapsonline.org/node/1602">What is LEAPS?</a> presentation to learn more.
@@ -393,8 +362,7 @@ p.pregrey > span > span > span > span.select2-selection__rendered {
 	        <p>Only the students of <a target="_blank" href="https://www.leapsonline.org/about/our-schools">participating schools</a> can complete the survey.</p>
 	        <p>Some fields will offer <strong>suggestions as you type</strong>. Choose a suitable suggestion if 
 	        one is presented, otherwise continue to type and your text will be accepted.</p>
-	        <p>If you need to <strong>insert extra rows</strong>, press <strong>add</strong> to get another row. 
-	        If you want to <strong>delete a row</strong>, press <strong>delete</strong> to remove the row.</p>
+	        <p>If you need to <strong>insert extra rows</strong>, press <strong>add</strong> to get another row.</p>
 	        <p><b>Required inputs have an asterisk.</b> Once entered they will become red if there is a problem. 
 	        You should check that all required inputs are green before proceeding. Inputs that are optional remain 
 	        white. You will only be able to submit the form once all required inputs have been answered.</p>
@@ -643,72 +611,103 @@ p.pregrey > span > span > span > span.select2-selection__rendered {
 	    <div class="col-sm-12">
 	        <div class="well">
 	            <h2>2. Qualifications and currently sitting</h2>
-	            <!--<p>Please input details of all qualifications 
-	            you have (or are studying for current year) for each year of school. 
-	            Please include any qualifications you sat but did not pass. If you do not yet know your grade, 
-	            select Unknown in the Grade field. If you have any qualifications that do not meet the criteria 
-	            below, you will have the option to describe them later.</p>-->
 
 							<p>Please input details of all qualifications you have 
 								(or are studying in the current year) for each year of school. 
 								Input any qualifications you sat but did not pass. The system will not allow you to bypass this section.   
 								If you do not know your grade yet, select "unknown" in the grade column.  
 								If you want to enter more qualifications for any year, use the "add" button to add extra rows. 
-								If you have no qualifications to enter, use the "delete" buttons to remove all the blank rows.
 								If you have any qualifications that do not meet the criteria below, you will have the option to add them later.</p>
 
+							<p>If you have no qualifications to enter, check this checkbox to confirm you are not providing any qualifications:</p>
+							<p></p><input type="checkbox" id="no_quals" name="no_quals" value="no_quals" style="margin-top:-5px;"> I have no qualifications to list.</p>
+
 							<p id="quals_warning" style="display: none; background-color: #F2DEDE; color: #B94A48; border: 1px solid #EED3D7;">
-								Note: you must provide details of all qualifications you are currently studying for, or else remove all but one of the blank rows.
+								Note: you must provide sufficient details of all qualifications you are currently studying for, or else check the box above to indicate you have no qualifications to list.
 							</p>
 
 						</div>
 	    </div>
 	</div>
 	
-    <div> <!-- need divs round each year quals set for row add/remove to work well-->
-
-    	<div class="row multi manyrows forquals">
-    	    <div class="col-sm-2">
-                <p class="hidden-xs">School year</p>
-        		<p class="pregrey"><select name="qualification_year" class="form-control qualificationselector" style="color: #999;">
-        		    <option value="" disabled="disabled" selected="selected">select School year</option>
-        		    <option>Third year</option>
-        		    <option>Fourth year</option>
-        		    <option>Fifth year</option>
-        		    <option>Sixth year</option>
-        		</select></p>
-        	</div>
-    	    <div class="col-sm-3">
-                <p class="hidden-xs">Subject</p>
-        		<p class="pregrey"><select name="qualification_subject" class="form-control select2this" style="color: #999;">
+    <div class="yearset">
+			<h4>Fourth Year</h4>
+			<div class="row manyrows fourthyear">
+    	    <div class="col-sm-6">
+							<input type="hidden" name="qualification_year" value="Fourth year">
+							<p class="pregrey"><select name="qualification_subject" class="qualification_subject form-control select2this" style="color: #999;">
         		    <option value="" disabled="disabled" selected="selected">select Subject</option>
-        		    {% for opt in selections.subjects %}
-        		        <option>{{ opt }}</option>
-        		    {% endfor %}
-        		</select></p>
+        		    {% for opt in selections.subjects %}<option>{{ opt }}</option>{% endfor %}
+      	  		</select></p>
         	</div>
     	    <div class="col-sm-3">
-                <p class="hidden-xs">Level of qualification</p>
-        		<p class="pregrey"><select name="qualification_level" class="form-control qualificationlevels" style="color: #999;">
+	        		<p class="pregrey"><select name="qualification_level" class="qualification_level form-control qualificationlevels" style="color: #999;">
         		    <option value="" disabled="disabled" selected="selected">select Level of qualification</option>
-        		    {% for opt in selections.levels %}
-        		        <option>{{ opt }}</option>
-        		    {% endfor %}
-        		</select></p>
+        		    {% for opt in selections.levels %}<option>{{ opt }}</option>{% endfor %}
+  	      		</select></p>
         	</div>
-    	    <div class="col-sm-2">
-                <p class="hidden-xs">Grade</p>
-        		<p class="pregrey"><select name="qualification_grade" class="form-control qualificationgrades" style="color: #999;">
+    	    <div class="col-sm-3">
+	        		<p class="pregrey"><select name="qualification_grade" class="qualification_grade form-control qualificationgrades" style="color: #999;">
         		    <option value="" disabled="disabled" selected="selected">select Grade</option>
-        		    {% for opt in selections.grades %}
-        		        <option>{{ opt }}</option>
-        		    {% endfor %}
-        		</select></p>
+        		    {% for opt in selections.grades %}<option>{{ opt }}</option>{% endfor %}
+  	      		</select></p>
         	</div>
-    	    <div class="col-sm-2">
-            </div>
     	</div>
-	</div>
+			<p style="width:150px;"><a class="btn btn-block btn-success add-row" href="#">add another</a></p>
+		</div>
+
+		<div class="yearset">
+			<h4><br>Fifth Year</h4>
+			<div class="row manyrows fifthyear">
+    	    <div class="col-sm-6">
+							<input type="hidden" name="qualification_year" value="Fifth year">
+							<p class="pregrey"><select name="qualification_subject" class="form-control select2this" style="color: #999;">
+        		    <option value="" disabled="disabled" selected="selected">select Subject</option>
+        		    {% for opt in selections.subjects %}<option>{{ opt }}</option>{% endfor %}
+      	  		</select></p>
+        	</div>
+    	    <div class="col-sm-3">
+	        		<p class="pregrey"><select name="qualification_level" class="form-control qualificationlevels" style="color: #999;">
+        		    <option value="" disabled="disabled" selected="selected">select Level of qualification</option>
+        		    {% for opt in selections.levels %}<option>{{ opt }}</option>{% endfor %}
+  	      		</select></p>
+        	</div>
+    	    <div class="col-sm-3">
+	        		<p class="pregrey"><select name="qualification_grade" class="form-control qualificationgrades" style="color: #999;">
+        		    <option value="" disabled="disabled" selected="selected">select Grade</option>
+        		    {% for opt in selections.grades %}<option>{{ opt }}</option>{% endfor %}
+  	      		</select></p>
+        	</div>
+    	</div>
+			<p style="width:150px;"><a class="btn btn-block btn-success add-row" href="#">add another</a></p>
+		</div>
+
+    <div class="yearset">
+			<h4><br>Sixth Year</h4>
+			<div class="row manyrows sixthyear">
+    	    <div class="col-sm-6">
+							<input type="hidden" name="qualification_year" value="Sixth year">
+							<p class="pregrey"><select name="qualification_subject" class="form-control select2this" style="color: #999;">
+        		    <option value="" disabled="disabled" selected="selected">select Subject</option>
+        		    {% for opt in selections.subjects %}<option>{{ opt }}</option>{% endfor %}
+      	  		</select></p>
+        	</div>
+    	    <div class="col-sm-3">
+	        		<p class="pregrey"><select name="qualification_level" class="form-control qualificationlevels" style="color: #999;">
+        		    <option value="" disabled="disabled" selected="selected">select Level of qualification</option>
+        		    {% for opt in selections.levels %}<option>{{ opt }}</option>{% endfor %}
+  	      		</select></p>
+        	</div>
+    	    <div class="col-sm-3">
+	        		<p class="pregrey"><select name="qualification_grade" class="form-control qualificationgrades" style="color: #999;">
+        		    <option value="" disabled="disabled" selected="selected">select Grade</option>
+								<option value="Currently sitting">Currently sitting</option>
+								<option value="Resit">Resit</option>
+  	      		</select></p>
+        	</div>
+    	</div>
+			<p style="width:150px;"><a class="btn btn-block btn-success add-row" href="#">add another</a></p>
+		</div>
 
 </div>
 
@@ -734,9 +733,8 @@ p.pregrey > span > span > span > span.select2-selection__rendered {
 	    </div>
 	</div>
 
-	<div class="row multi">
-	    <div class="col-sm-4">
-            <p class="hidden-xs">College / University</p>
+	<div class="row">
+	    <div class="col-sm-6">
     		<p class="pregrey"><select class="form-control institutionselector select2this" name="application_institution" style="color: #999;">
     		    <option value="" disabled="disabled" selected="selected">select College / University</option>
     		    {% for opt in selections.institutions %}
@@ -744,8 +742,7 @@ p.pregrey > span > span > span > span.select2-selection__rendered {
     		    {% endfor %}
     		</select></p>
     	</div>
-	    <div class="col-sm-4">
-            <p class="hidden-xs">Subject</p>
+	    <div class="col-sm-3">
     		<p class="pregrey"><select class="form-control subjectselector select2this" name="application_subject" style="color: #999;">
     		    <option value="" disabled="disabled" selected="selected">select Subject</option>
     		    {% for opt in selections.advancedsubjects %}
@@ -753,8 +750,7 @@ p.pregrey > span > span > span > span.select2-selection__rendered {
     		    {% endfor %}
     		</select></p>
     	</div>
-	    <div class="col-sm-2">
-            <p class="hidden-xs">Level of study</p>
+	    <div class="col-sm-3">
     		<p class="pregrey"><select class="form-control levelselector select2this" name="application_level" style="color: #999;">
     		    <option value="" disabled="disabled" selected="selected">select Level of study</option>
     		    {% for opt in selections.advancedlevels %}
@@ -762,99 +758,9 @@ p.pregrey > span > span > span > span.select2-selection__rendered {
     		    {% endfor %}
     		</select></p>
     	</div>
-	    <div class="col-sm-2">
-	    </div>
 	</div>
+	<p style="width:150px;"><a class="btn btn-block btn-success add-row" href="#">add another</a></p>
 </div>
-
-
-
-
-
-
-        
-
-<!-- the interests page -->
-<!--
-<div class="part interests">
-
-	<div class="row">
-	    <div class="col-sm-12">
-	        <div class="well">
-	            <h2>4. Interests and achievements</h2>
-	            <p>Please give short details of your extra-curricular interests and achievements e.g. 
-				sport, music, drama, Duke of Edinburgh, prefect etc and they will be discussed in more detail at your interview. 
-				It is recommended that you write your own copy of interests, achievements and work experience in a document elsewhere, 
-				then insert them into this form. You will find the document useful for your personal statement in your UCAS application. 
-				Remember - you won't be able to return to this form! 
-				Use one box per interest, up to the maximum of 6.</p>
-	        </div>
-	    </div>
-	</div>
-
-	<div class="row multi">
-	--><!--<div class="col-sm-4">
-            <p>Title</p>
-    		<p><input class="form-control" type="text" name="interest_title"></p>
-    	</div>--><!--
-	    <div class="col-sm-9">
-			--><!-- add data-required="true" to the following textarea to actually make the maxwords take effect --><!--
-    		<p><textarea class="form-control" name="interest_brief_description" data-maxwords="200" data-trigger="keyup focusout change"></textarea></p>
-    	</div>
-	    <div class="col-sm-3">
-            <p class="hidden-xs">Interest title</p>
-    		<p><input type="text" class="form-control" name="interest_title" placeholder="Interest title"></p>
-	    </div>
-	</div>
-
-</div>
--->
-
-
-
-
-
-        
-
-
-<!-- the experience page -->
-<!--
-<div class="part experience">
-
-	<div class="row">
-	    <div class="col-sm-12">
-	        <div class="well">
-	            <h2>5. Work and other experience</h2>
-	            <p>Please give short details of any work or voluntary experience you have had e.g. 
-				paid employment, school committees, Access to the Professions events etc and they can be discussed further at 
-				your interview. It is recommended that you write your own copy of interests, achievements and work experience 
-				in a document elsewhere, then insert them into this form. You will find the document useful for your personal 
-				statement in your UCAS application. Remember - you won't be able to return to this form! 
-				Use one row per experience, up to the maximum of 6.</p>
-			</div>
-	    </div>
-	</div>
-
-	<div class="row multi">
-	    <div class="col-sm-6">
-			--><!-- add data-required="true" to the following textarea to actually make the maxwords take effect --><!--
-    		<p><textarea class="form-control" name="experience_brief_description" data-maxwords="200" data-trigger="keyup focusout change"></textarea></p>
-    	</div>
-	    <div class="col-sm-3">
-            <p class="hidden-xs">Date from</p>
-    		<p><input type="text" class="form-control datepicker" name="experience_date_from" placeholder="Date from"></p>
-            <p class="hidden-xs">Date to</p>
-    		<p><input type="text" class="form-control datepicker" name="experience_date_to" placeholder="Date to (unless ongoing)"></p>
-    	</div>
-	    <div class="col-sm-3">
-            <p class="hidden-xs">Job title</p>
-    		<p><input type="text" class="form-control" name="experience_title" placeholder="Job title"></p>
-    	</div>
-	</div>
-
-</div>
--->
-
 
 
 
@@ -891,10 +797,6 @@ p.pregrey > span > span > span > span.select2-selection__rendered {
 
 	<div class="row">
 	    <div class="col-sm-4">
-            <!--<p>If you feel your academic performance has been affected at any time in school, 
-			please tell us about it here e.g. a period of absence from school, time spent in care, estrangement, 
-			health issues, caring responsibilities, bereavement. (At your 
-			LEAPS interview, we may discuss if this would be relevant to share with university admissions tutors.)</p>-->
 					<p>Have there been any issues that have negatively impacted your school performance e.g. mental health or bereavement. 
 						We can discuss this if it would be relevant to share with universities/colleges.</p>
 	    </div>
@@ -905,7 +807,6 @@ p.pregrey > span > span > span > span.select2-selection__rendered {
 
 	<div class="row">
 	    <div class="col-sm-4">
-            <!--<p>Do you have any particular queries or concerns that you would like covered at your LEAPS Interview?</p>-->
 						<p>Is there anything you think would be important for our interviewer to be aware of prior to your interview?</p>
 	    </div>
 	    <div class="col-sm-8">
