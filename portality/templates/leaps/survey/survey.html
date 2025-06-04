@@ -257,12 +257,10 @@ jQuery(document).ready(function() {
 
 		
     var triggersave = function(event) {
+				event.preventDefault();
 				$('#quals_warning').hide();
 				var validated = true;
-				if ( !$('#survey').parsley('validate') ) {
-						validated = false;
-						event.preventDefault(); // this also focuses the first wrong element
-				}
+				if ( !$('#survey').parsley('validate') ) validated = false;
 				var fourth_quals_count = 0;
 				var fifth_quals_count = 0
 				$('.qualificationlevels').each(function() {
@@ -270,15 +268,22 @@ jQuery(document).ready(function() {
 						if ($(this).val() && $(this).closest('.row').hasClass('fifthyear')) fifth_quals_count++;
 				});
 				if ((fourth_quals_count < 6 || fifth_quals_count < 5) && !$('#no_quals').is(':checked')) {
-						event.preventDefault();
 						$('#quals_warning').show();
 						if (validated) {
 								$('html, body').animate({
 										scrollTop: $('#quals_warning').offset().top - 100
 								}, 500);
 						}
+						validated = false;
 				}
-			};
+				if (validated) {
+						$('.qualificationlevels').each(function() {
+								if (!$(this).val()) $(this).closest('.row').remove();
+						});
+						$('#survey').parsley('destroy');
+						$('#survey').submit();
+				}
+		};
     $('#triggersave').bind('click',triggersave);
 
 		function checkKeys(e){
@@ -911,23 +916,20 @@ p.pregrey > span > span > span > span.select2-selection__rendered {
 
 
 
-<!-- the form submission button -->
-<div class="part submit">
-
-	<div class="row" style="margin-top:30px;">
-	    <div class="col-sm-12">
-        	<p><input id="triggersave" class="btn btn-success btn-block" type="submit" name="submit" value="Submit your survey" /></p>
-        	<p>Please wait for the confirmation page to load after you hit the Submit Your Survey button. It may take a few moments. Thanks!</p>
-	    </div>
-	</div>
-
-</div>
-
-
-
 
 </fieldset>
 </form>
+
+<!-- the form submission button -->
+<div class="part submit">
+		<div class="row" style="margin-top:30px;">
+				<div class="col-sm-12">
+						<!--<p><input id="triggersave" class="btn btn-success btn-block" type="submit" name="submit" value="Submit your survey" /></p>-->
+						<p><a id="triggersave" class="btn btn-success btn-block" href="#submit">Submit your survey</a></p>
+						<p>Please wait for the confirmation page to load after you hit the Submit Your Survey button. It may take a few moments. Thanks!</p>
+				</div>
+		</div>
+</div>
 
 {% endblock %}
 
