@@ -1,6 +1,6 @@
 import csv, json, requests
 
-h = 'http://localhost:9200/leaps_simd/'
+h = 'http://localhost:9200/leaps_simd/_doc/'
 
 rows = csv.DictReader(open('SIMD_2020_v2_updated_2025.csv','r'))
 
