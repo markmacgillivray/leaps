@@ -25,10 +25,10 @@ for row in rows:
     data['simd_decile'] = row['SIMD2020_Decile']
     data['simd_quintile'] = row['SIMD2020_Quintile']
     res = requests.post(h+id,data=json.dumps(data))
-    print res.status_code
+    print(res.status_code)
     count += 1
-    print count
+    print(count)
 
-print 'done'
-print count
-print hasnew
+print('done')
+print(count)
+print(hasnew)
