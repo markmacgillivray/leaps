@@ -161,7 +161,7 @@ def index(model=None, deleteall=False):
                 c.save()
 
         elif model.lower() == "subjects":
-            try:
+            if True: #try:
                 if isinstance(current_user.is_institution,bool):
                     if 'institution' not in request.values or request.values['institution'] == "":
                         flash('You cannot upload subjects without selecting an institution to upload them to. For uploading generic subjects, upload to subject or advancedsubject')
@@ -173,17 +173,17 @@ def index(model=None, deleteall=False):
                 if not isinstance(records,list) or (len(records) > 0 and 'name' not in records[0].keys()):
                     flash('Your file appears to have no records or does not have the required keys - "name" is required. Please check your file and try again.')
                 else:
-                    try:
+                    if True: #try:
                         institution.data['subjects'] = records
                         institution.save()
                         time.sleep(1)
                         flash(str(len(records)) + " subjects have been added.")
-                    except:
+                    else: #except:
                         flash('Sorry, there was an unknown error. Please check your file and try again')
-            except:
+            else: #except:
                 flash('Sorry, there was an unknown error. Please check your file and try again')
             
-            if isinstance(current_user.is_institution,bool):
+            if isinstance(current_user.is_institution,bool) or current_user.do_admin:
                 return redirect('/admin/data/institution')
             else:
                 return redirect('/universities/subjects')

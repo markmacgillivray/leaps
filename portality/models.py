@@ -283,10 +283,10 @@ class Student(DomainObject):
                                 appn['pae_requested'] = datetime.now().strftime("%d/%m/%Y")
                             if '_process_paes_date' not in rec:
                                 rec['_process_paes_date'] = datetime.now().strftime("%d/%m/%Y")
-                            if rec['status'] == 'paes_complete':
-                                rec['status'] = 'paes_in_progress'
-                            if rec['status'] not in ['paes_in_progress']:
-                                rec['status'] = 'paes_requested'
+                            if rec['status'] == 'course_enquiries_complete':
+                                rec['status'] = 'course_enquiries_in_progress'
+                            if rec['status'] not in ['course_enquiries_in_progress']:
+                                rec['status'] = 'course_enquiries_requested'
                         elif request.form.getlist('application_pae_requested')[k] != "No" and request.form.getlist('application_pae_requested')[k] != "":
                             appn['pae_requested'] = request.form.getlist('application_pae_requested')[k]
                     except:
@@ -367,7 +367,7 @@ class School(DomainObject):
 
         for c in self.data.get('contacts',[]):
             # create any new accounts
-            if c.get('email',"") != "" and ( old is None or c.get('email',"") not in [o.get('email',False) for o in old.data.get('contacts',[])] ):
+            if c.get('email',"") != "" and ( old is None or c['email'] not in [o.get('email',False) for o in old.data.get('contacts',[])] or Account.pull(c['email']) is None ):
                 account = Account.pull(c['email'])
                 if account is None:
                     c['email'] = c['email'].lower()
@@ -386,9 +386,10 @@ class School(DomainObject):
             # change any passwords
             elif c.get('email',"") != "" and c.get('password',"") != "":
                 account = Account.pull(c['email'])
-                account.set_password(c['password'])
-                account.save()
-                c['password'] = ""
+                if not Account is None:
+                    account.set_password(c['password'])
+                    account.save()
+                    c['password'] = ""
 
         r = self.send('post', 'doc', self.data['id'], self.data)
 
