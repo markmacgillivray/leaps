@@ -124,7 +124,11 @@ def index():
 @blueprint.route('/settings', methods=['GET','POST'])
 def settings():
     if request.method == 'POST' and current_user.do_admin:
-        inputs = request.json
+        #inputs = request.json
+        try:
+            inputs = request.json
+        except:
+            inputs = request.values
         acc = models.Account.pull(app.config['SUPER_USER'][0])
         if 'settings' not in acc.data: acc.data['settings'] = {}
         for key in inputs.keys():
@@ -218,7 +222,25 @@ def studentfix(uuid=None):
                     del apd['pae_requested']
                     break
     student.save()
+    flash('Student record has been fixed.', 'success')
     return redirect('/admin/student/' + uuid)
+
+@blueprint.route('/student/fixes', methods=['GET'])
+def studentfixes():
+    fixed = 0
+    qr = {"query":{"bool":{"must":[], "must_not":[]}}, "size":10000}
+    qr['query']['bool']['must'].append({"term":{"archive"+app.config['FACET_FIELD']:"current"}})
+    qr['query']['bool']['must'].append({"query_string":{"default_field": "_process_paes_date", "query": "*"}})
+    qr['query']['bool']['must_not'].append({"term":{"_process_paes":True}})
+    s = models.Student.query(q=qr)
+    for i in s.get('hits',{}).get('hits',[]): 
+        student = models.Student.pull(i['_source']['id'])
+        if request.values.get('fix',False):
+            student.data['_process_paes'] = True
+            student.save()
+        fixed += 1
+    flash(str(fixed) + ' student records ' + ('were fixed' if request.values.get('fix',False) else 'are suitable to fix'), 'success')
+    return redirect('/admin')
 
 @blueprint.route('/student/assign', methods=['GET'])
 def studentassign():
@@ -356,7 +378,7 @@ def data(model=None,uuid=None):
                 rec = klass().pull(uuid)
                 if rec is not None:
                     rec.delete()
-                    flash(model + " " + str(rec.id) + " deleted")
+                    flash(model + " " + str(rec.data['name'] if rec.data.get('name', False) else rec.id) + " deleted")
                     return redirect(url_for('.data'))
                 else:
                     abort(404)

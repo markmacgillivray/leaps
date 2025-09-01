@@ -102,9 +102,14 @@ class DomainObject(UserDict):
     def save(self):
         self.data = self.prep(self.data)
         r = self.send('post', 'doc', self.data['id'], self.data)
+        #print(r.json())
+        #print(r.status_code)
 
     def save_from_form(self,request):
-        newdata = request.json if request.json else request.values
+        try:
+            newdata = request.json # was it ever going to be json? Could be legacy
+        except:
+            newdata = request.values
         for k, v in newdata.items():
             if k not in ['submit']:
                 self.data[k] = v

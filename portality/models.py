@@ -54,7 +54,7 @@ class Student(DomainObject):
         
         if 'status' not in rec or rec['status'] == "":
             rec['status'] = 'new'
-        elif rec['status'].startswith('paes') and not rec.get('_process_paes',False):
+        elif (rec['status'].startswith('paes') or rec['status'].startswith('course_enquiries')) and not rec.get('_process_paes',False):
             rec['_process_paes'] = True
             rec['_process_paes_date'] = datetime.now().strftime("%d-%m-%Y")
 
@@ -282,6 +282,7 @@ class Student(DomainObject):
                             if 'pae_requested' not in appn:
                                 appn['pae_requested'] = datetime.now().strftime("%d/%m/%Y")
                             if '_process_paes_date' not in rec:
+                                rec['_process_paes'] = True
                                 rec['_process_paes_date'] = datetime.now().strftime("%d/%m/%Y")
                             if rec['status'] == 'course_enquiries_complete':
                                 rec['status'] = 'course_enquiries_in_progress'
