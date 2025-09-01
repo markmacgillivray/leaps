@@ -231,14 +231,19 @@ def studentfixes():
     qr = {"query":{"bool":{"must":[], "must_not":[]}}, "size":10000}
     qr['query']['bool']['must'].append({"term":{"archive"+app.config['FACET_FIELD']:"current"}})
     #qr['query']['bool']['must'].append({"query_string":{"default_field": "_process_paes_date", "query": "*"}})
-    #qr['query']['bool']['must_not'].append({"term":{"_process_paes":True}})
-    qr['query']['bool']['must'].append({"query_string":{"default_field": "status", "query": "paes*"}})
+    qr['query']['bool']['must_not'].append({"term":{"_process_paes":True}})
+    qr['query']['bool']['must'].append({"term":{"status"+app.config['FACET_FIELD']:"course_enquiries_requested"}})
+    #qr['query']['bool']['must'].append({"query_string":{"default_field": "status", "query": "paes*"}})
     s = models.Student.query(q=qr)
     for i in s.get('hits',{}).get('hits',[]): 
         student = models.Student.pull(i['_source']['id'])
         if request.values.get('fix',False):
-            #student.data['_process_paes'] = True
-            student.data['status'] = student.data['status'].replace('paes_','course_enquiries_')
+            for appn in student.data['applications']:
+                if appn.get('pae_requested',False):
+                    student.data['_process_paes_date'] = appn['pae_requested']
+                    break
+            student.data['_process_paes'] = True
+            #student.data['status'] = student.data['status'].replace('paes_','course_enquiries_')
             student.save()
         fixed += 1
     flash(str(fixed) + ' student records ' + ('were fixed' if request.values.get('fix',False) else 'are suitable to fix'), 'success')
