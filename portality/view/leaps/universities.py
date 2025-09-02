@@ -364,7 +364,7 @@ def _get_paes_awaiting_email():
                         {'_process_paes':True}
                     },
                     {'query_string':
-                        {'query':'*','default_field':'pae_reply_received'}
+                        {'query':'*','default_field':'applications.pae_reply_received'}
                     }
                 ],
                 'must_not':[
