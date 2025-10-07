@@ -286,7 +286,7 @@ def _email_pae(student, application, flashable=True):
             elif appn.get('pae_requested',False) and not appn.get('pae_emailed',False):
                 all_mailed = False
 
-        if all_mailed and student.data['status'].startswith('paes'):
+        if all_mailed and student.data['status'].startswith('course_enquiries'):
             student.data['status'] = 'course_enquiries_complete'
 
         student.save()

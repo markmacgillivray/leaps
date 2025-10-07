@@ -82,11 +82,11 @@ jQuery(document).ready(function() {
                         <td>{{ student.date_of_birth }}</td>
                         <td>{{ student.status }}</td>
                         <td>
-                        {% if student.status in ["new","query","absent","awaiting_interview","interviewed"] %}
+                        {% if student.status in ["new","query","absent","awaiting_interview","allocated_to_interviewer","interviewed"] %}
                             To be confirmed - check back later
                         {% elif student.status in ["not_eligible_interviewed","not_eligible_not_interviewed","not_applying_not_interviewed"] %}
                             Not LEAPS eligible
-                        {% elif student.status in ["not_applying_interviewed","course_enquiries_requested","course_enquiries_in_progress","course_enquiries_complete","complete"] %}
+                        {% elif student.status in ["not_applying_interviewed","course_enquiries_requested","course_enquiries_in_progress","course_enquiries_complete","complete","complete_interviewed"] %}
                             LEAPS eligible
                         {% else %}
                             Unknown - check with LEAPS staff
