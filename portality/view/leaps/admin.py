@@ -248,7 +248,7 @@ def studentfixes():
             if appn.get('pae_requested', False) and not appn.get('pae_emailed', False): all_mailed = False
         #student.data['_process_paes'] = True
         #student.data['status'] = student.data['status'].replace('paes_','course_enquiries_')
-        if all_mailed and student.data['status'].startsWith('course_enquiries_'):
+        if all_mailed and student.data['status'].startswith('course_enquiries_'):
             student.data['status'] = 'course_enquiries_complete'
             if request.values.get('fix',False): student.save()
             fixed += 1
