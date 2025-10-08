@@ -234,9 +234,10 @@ def studentfixes():
     #qr['query']['bool']['must_not'].append({"term":{"_process_paes":True}})
     #qr['query']['bool']['must'].append({"term":{"status"+app.config['FACET_FIELD']:"course_enquiries_requested"}})
     #qr['query']['bool']['must'].append({"query_string":{"default_field": "status", "query": "paes*"}})
-    qr['query']['bool']['must'].append({"query_string":{"default_field": "status", "query": "course_enquiries*"}})
-    qr['query']['bool']['must'].append({"query_string":{"default_field": "applications.pae_requested", "query": "*"}})
-    qr['query']['bool']['must_not'].append({"term":{"status"+app.config['FACET_FIELD']:"course_enquiries_complete"}})
+    #qr['query']['bool']['must'].append({"query_string":{"default_field": "status", "query": "course_enquiries*"}})
+    #qr['query']['bool']['must'].append({"query_string":{"default_field": "applications.pae_requested", "query": "*"}})
+    #qr['query']['bool']['must_not'].append({"term":{"status"+app.config['FACET_FIELD']:"course_enquiries_complete"}})
+    qr['query']['bool']['must'].append({"term":{"status"+app.config['FACET_FIELD']:"course_enquiries_in_progress"}})
     s = models.Student.query(q=qr)
     for i in s.get('hits',{}).get('hits',[]): 
         student = models.Student.pull(i['_source']['id'])
@@ -248,7 +249,7 @@ def studentfixes():
             if appn.get('pae_requested', False) and not appn.get('pae_emailed', False): all_mailed = False
         #student.data['_process_paes'] = True
         #student.data['status'] = student.data['status'].replace('paes_','course_enquiries_')
-        if all_mailed and student.data['status'].startswith('course_enquiries_'):
+        if all_mailed: #and student.data['status'].startswith('course_enquiries_'):
             student.data['status'] = 'course_enquiries_complete'
             if request.values.get('fix',False): student.save()
             fixed += 1
